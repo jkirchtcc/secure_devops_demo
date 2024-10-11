@@ -1,0 +1,36 @@
+---
+- name: Add ansible_user to the sudo group, set up SSH key, and set password
+  hosts: servers
+  become: true
+  remote_user: root
+  vars_files:
+    - vault.yml
+  tasks:
+    - name: Install passlib on remote hosts (if required)
+      ansible.builtin.package:
+        name: python3-passlib
+        state: present
+
+    - name: Ensure ansible_user is in the sudo group with a hashed password
+      user:
+        name: ansible_user
+        groups: sudo
+        append: true
+        password: "{{ ansible_user_password | password_hash('sha512') }}"
+
+    - name: Create .ssh directory for ansible_user if it does not exist
+      file:
+        path: /home/ansible_user/.ssh
+        state: directory
+        owner: ansible_user
+        group: ansible_user
+        mode: '0700'
+
+    - name: Add SSH public key to ansible_user authorized_keys
+      copy:
+        src: ~/.ssh/DemoSSHKey.pub
+        dest: /home/ansible_user/.ssh/authorized_keys
+        owner: ansible_user
+        group: ansible_user
+        mode: '0600'
+

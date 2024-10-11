@@ -1,0 +1,33 @@
+---
+- name: Configure SSHD for Ubuntu 20.04, 22.04, and 24.04
+  hosts: servers
+  become: true
+  vars_files:
+    - vault.yml
+  tasks:
+    - name: Ensure root login is disabled
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+
+    - name: Ensure public key authentication is enabled
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+        state: present
+
+    - name: Disable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        state: present
+
+    - name: Restart SSHD to apply changes
+      service:
+        name: ssh
+        state: restarted
+

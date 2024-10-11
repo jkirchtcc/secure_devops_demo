@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Ensure ssh-agent is started and environment variables are saved
+      blockinfile:
+        path: ~/.bashrc
+        marker: "# {mark} Ansible SSH agent configuration"
+        block: |
+          # Ansible modified: SSH agent setup
+          if [ -z "$SSH_AUTH_SOCK" ]; then
+              eval "$(ssh-agent -s)" > ~/.ssh-agent-variables
+              ssh-add ~/.ssh/DemoSSHKey
+          fi
+          if [ -f ~/.ssh-agent-variables ]; then
+              source ~/.ssh-agent-variables
+          fi
+        create: yes
+
