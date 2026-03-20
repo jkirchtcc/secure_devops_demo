@@ -3,19 +3,15 @@
 # Update the package list
 sudo apt update
 
-# Install pipx if not already installed
-sudo apt install -y pipx
+# Install uv if not already installed
+if ! command -v uv &> /dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    source $HOME/.local/bin/env
+fi
 
-# Ensure pipx is on the PATH
-pipx ensurepath
-
-# Install Ansible using pipx, including its dependencies
-pipx install --include-deps ansible
-
-# Install passlib for Ansible to use password hashing
-pipx inject ansible passlib
+# Install Ansible using uv tool, including its dependencies
+uv tool install --with passlib ansible
 
 # Confirm installations
-echo "Installed Ansible and passlib using pipx."
+echo "Installed Ansible and passlib using uv."
 ansible --version
-
