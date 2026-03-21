@@ -1,39 +1,26 @@
 #!/bin/bash
 set -euo pipefail
 
-# Reads local QEMU/KVM target VM IPs and writes inventory.ini + SSH config
+# Writes inventory.ini + SSH config for local QEMU/KVM target VMs (static IPs)
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 INVENTORY="$REPO_DIR/inventory.ini"
 SSH_CONFIG="$HOME/.ssh/config"
 SSH_KEY="$HOME/.ssh/DemoSSHKey"
 
+# Static IPs assigned via cloud-init
+SERVER1_IP="192.168.122.101"
+SERVER2_IP="192.168.122.102"
+SERVER3_IP="192.168.122.103"
+
 # Markers for idempotent SSH config updates
 BEGIN_MARKER="# BEGIN cyberforge-demo"
 END_MARKER="# END cyberforge-demo"
 
-declare -A VM_IPS
-
-echo "Reading local VM IPs..."
-for VM_NAME in target-1 target-2 target-3; do
-    if ! virsh dominfo "$VM_NAME" &>/dev/null; then
-        echo "Error: $VM_NAME does not exist. Run bin/create_target_vms.sh first."
-        exit 1
-    fi
-
-    IP=$(virsh domifaddr "$VM_NAME" 2>/dev/null | grep -oP '192\.168\.\d+\.\d+' | head -1 || true)
-    if [ -z "$IP" ]; then
-        echo "Error: Could not get IP for $VM_NAME. Is it running?"
-        exit 1
-    fi
-
-    VM_IPS[$VM_NAME]="$IP"
-    echo "  $VM_NAME: $IP"
-done
-
-SERVER1_IP="${VM_IPS[target-1]}"
-SERVER2_IP="${VM_IPS[target-2]}"
-SERVER3_IP="${VM_IPS[target-3]}"
+echo "Local VM IPs (static):"
+echo "  target-1: $SERVER1_IP"
+echo "  target-2: $SERVER2_IP"
+echo "  target-3: $SERVER3_IP"
 
 # Write inventory.ini
 cat > "$INVENTORY" <<EOF

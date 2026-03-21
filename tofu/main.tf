@@ -7,7 +7,7 @@ locals {
   servers = {
     server1 = "ubuntu-24-04-x64"
     server2 = "ubuntu-22-04-x64"
-    server3 = "ubuntu-20-04-x64"
+    server3 = "ubuntu-24-10-x64"
   }
 }
 

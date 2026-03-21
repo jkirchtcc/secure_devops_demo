@@ -21,19 +21,26 @@ virt-manager  # should launch the GUI
 
 ## 2. Create the Control VM
 
-Open virt-manager and create a new VM:
+```bash
+bin/create_control_vm.sh
+```
 
-- **ISO:** Ubuntu Server 24.04 LTS
-- **RAM:** 2048 MB (or more)
-- **Disk:** 20 GB
-- **Network:** NAT (default virbr0)
-- **Name:** `control-vm`
+This downloads the Ubuntu 24.04 cloud image and creates a VM with 2 GB RAM, 2 vCPUs, 20 GB disk, and an `ansible_user` account.
 
-During Ubuntu installation:
-- Username: `ansible_user`
-- Install OpenSSH server when prompted
+After it boots, set a password for `ansible_user`:
 
-After install, shut down and take a snapshot: `fresh-install`.
+```bash
+virsh console control-vm
+# Log in as ansible_user (no password yet)
+passwd
+# Ctrl+] to exit console
+```
+
+Then SSH in:
+
+```bash
+ssh ansible_user@<control-vm-ip>
+```
 
 ## 3. Clone the Repo Inside the VM
 

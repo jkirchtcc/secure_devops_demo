@@ -17,7 +17,7 @@ korell (presenter laptop)
       │
       ├── target-1 (Ubuntu 24.04)
       ├── target-2 (Ubuntu 22.04)
-      └── target-3 (Ubuntu 20.04)
+      └── target-3 (Ubuntu 24.10)
       All on virbr0 (192.168.122.0/24)
 
 Phase 2: Cloud (extends Phase 1, needs internet)
@@ -33,7 +33,7 @@ Same Control VM
 ## Prerequisites
 
 - **QEMU/KVM** — installed on the host machine (`bin/install_qemu_kvm.sh`)
-- **Control VM** — Ubuntu Server 24.04, set up with `bin/setup_control_vm.sh`
+- **Control VM** — created with `bin/create_control_vm.sh`, set up with `bin/setup_control_vm.sh`
 - **SSH Key** — `DemoSSHKey` and `DemoSSHKey.pub` in `~/.ssh/`
 - **pass + GPG** — vault password stored in `pass`
 - **DigitalOcean API token** — stored in `pass` (Phase 2 only)
@@ -42,6 +42,7 @@ Same Control VM
 
 ### Setup Scripts
 - **`bin/install_qemu_kvm.sh`** — Installs QEMU/KVM + virt-manager on the host
+- **`bin/create_control_vm.sh`** — Creates the control VM from Ubuntu 24.04 cloud image
 - **`bin/setup_control_vm.sh`** — One-script control VM setup (Ansible, OpenTofu, pass, GPG)
 - **`bin/install_ansible.sh`** — Installs Ansible via uv
 - **`bin/install_opentofu.sh`** — Installs OpenTofu via official apt repository

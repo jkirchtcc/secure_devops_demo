@@ -53,7 +53,7 @@ bin/update_local_inventory.sh
 cat inventory.ini
 ```
 
-**Talking point:** "We have 3 local VMs — Ubuntu 24.04, 22.04, and 20.04 — running on QEMU/KVM. No internet needed, no cloud costs. Perfect for development and testing."
+**Talking point:** "We have 3 local VMs — Ubuntu 24.04, 22.04, and 24.10 — running on QEMU/KVM. No internet needed, no cloud costs. Perfect for development and testing."
 
 ### Verify connectivity
 
@@ -118,7 +118,7 @@ cat tofu/variables.tf
 cat tofu/outputs.tf
 ```
 
-**Talking point:** "We're provisioning 3 Ubuntu droplets — 24.04, 22.04, and 20.04 — to show Ansible working across different OS versions. The exact same versions as our local VMs."
+**Talking point:** "We're provisioning 3 Ubuntu droplets — 24.04, 22.04, and 24.10 — to show Ansible working across different OS versions. The exact same versions as our local VMs."
 
 **Talking point:** "Notice `sensitive = true` on the token variable — OpenTofu won't show this in plan or apply output."
 
