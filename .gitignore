@@ -1,2 +1,10 @@
 NOTES.md
 .DS_Store
+DO_TOKEN
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+!*.tfvars.example
+inventory-local.ini
