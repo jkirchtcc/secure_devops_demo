@@ -187,9 +187,6 @@ pause
 slide 28 "Let's spin up more machines"
 before_after "inventory.ini" inventory.ini "bin/update_local_inventory.sh"
 pause
-echo -e "${BOLD}── AFTER: ~/.ssh/config ──${RESET}"
-cat ~/.ssh/config
-pause
 
 slide 29 "Ansible to update .bashrc"
 run ansible-playbook add_ssh_key.yml
@@ -209,7 +206,11 @@ pause
 run ansible-playbook add_ansible_user.yml
 pause
 
-slide 33 "Verify ansible_user can connect first"
+slide 33 "Switch SSH config to ansible_user"
+before_after "~/.ssh/config" "$HOME/.ssh/config" "bin/update_ssh_config.sh"
+pause
+
+slide 34 "Verify ansible_user can connect"
 run ansible-playbook ping-servers.yml
 pause
 

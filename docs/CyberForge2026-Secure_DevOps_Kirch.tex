@@ -778,53 +778,20 @@ localhost  : ok=3  changed=1
 % ==============================================================
 \begin{frame}[fragile]{Let's spin up more machines}
 \begin{itemize}
-  \item We are going to need our SSH Keys for this
   \item 3 local VMs on QEMU/KVM -- no internet needed
-\end{itemize}
-\vspace{0.2cm}
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\begin{termsmall}
-# SSH configuration for servers
-Host server1
-    HostName 192.168.122.101
-    User ansible_user
-    IdentityFile ~/.ssh/DemoSSHKey
-    AddKeysToAgent yes
-
-Host server2
-    HostName 192.168.122.102
-    User ansible_user
-    IdentityFile ~/.ssh/DemoSSHKey
-    AddKeysToAgent yes
-
-Host server3
-    HostName 192.168.122.103
-    User ansible_user
-    IdentityFile ~/.ssh/DemoSSHKey
-    AddKeysToAgent yes
-\end{termsmall}
-\end{column}
-\begin{column}{0.48\textwidth}
-\begin{itemize}
-  \item Update 2 files:
-  \begin{itemize}
-    \item \textbf{\texttt{\textasciitilde/.ssh/config}}
-    \item \textbf{\texttt{inventory.ini}}
-  \end{itemize}
+  \item Add them to \textbf{\texttt{inventory.ini}} so Ansible can reach them
 \end{itemize}
 \vspace{0.3cm}
-\begin{termsmall}
-[local]
-localhost ansible_connection=local
-
-[servers]
-192.168.122.101
-192.168.122.102
-192.168.122.103
-\end{termsmall}
-\end{column}
-\end{columns}
+\begin{term}
+ansible_user@ansible:~/secure_devops_demo$ bin/update_local_inventory.sh
+Local VM IPs (static):
+  target-1: 192.168.122.101
+  target-2: 192.168.122.102
+  target-3: 192.168.122.103
+Updated inventory.ini
+Cleared stale known_hosts entries for target IPs
+Done. Run bin/update_ssh_config.sh after creating ansible_user.
+\end{term}
 \end{frame}
 
 % ==============================================================
@@ -1022,7 +989,42 @@ ok: [192.168.122.103]
 % ==============================================================
 % Slide 33 - Wait, what?
 % ==============================================================
-\begin{frame}[fragile]{Verify \texttt{ansible\_user} can connect first}
+\begin{frame}[fragile]{Switch SSH config to \texttt{ansible\_user}}
+\begin{term}
+ansible_user@ansible:~/secure_devops_demo$ bin/update_ssh_config.sh
+Updated ~/.ssh/config -- servers now connect as ansible_user
+\end{term}
+\vspace{0.2cm}
+\begin{termsmall}
+# BEGIN cyberforge-demo
+Host server1
+    HostName 192.168.122.101
+    User ansible_user
+    IdentityFile ~/.ssh/DemoSSHKey
+    AddKeysToAgent yes
+    StrictHostKeyChecking accept-new
+
+Host server2
+    HostName 192.168.122.102
+    User ansible_user
+    IdentityFile ~/.ssh/DemoSSHKey
+    AddKeysToAgent yes
+    StrictHostKeyChecking accept-new
+
+Host server3
+    HostName 192.168.122.103
+    User ansible_user
+    IdentityFile ~/.ssh/DemoSSHKey
+    AddKeysToAgent yes
+    StrictHostKeyChecking accept-new
+# END cyberforge-demo
+\end{termsmall}
+\end{frame}
+
+% ==============================================================
+% Slide 34 - Verify ansible_user can connect
+% ==============================================================
+\begin{frame}[fragile]{Verify \texttt{ansible\_user} can connect}
 \begin{term}
 ansible_user@ansible:~/secure_devops_demo$ ansible-playbook ping-servers.yml
 
