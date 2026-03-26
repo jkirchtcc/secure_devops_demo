@@ -5,4 +5,4 @@
 #
 # Runs automatically — no input needed. Ctrl-C to abort.
 
-ssh ansible 'cd ~/secure_devops_demo && bin/demo.sh 1 1'
+ssh ansible 'cd ~/secure_devops_demo && bin/demo.sh --test 1 1'
