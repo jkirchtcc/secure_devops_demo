@@ -36,10 +36,10 @@
     flex-direction: column;
     align-items: center;
     padding: 1.5rem 1rem 1rem;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
-  #slide-title {
+  #entry-title {
     font-size: 1rem;
     font-weight: bold;
     color: #aac4f0;
@@ -52,7 +52,7 @@
   }
 
   /* ── Slide image + annotation overlay ── */
-  #slide-img-wrap {
+  #slide-wrap {
     max-width: 900px;
     width: 100%;
     position: relative;
@@ -70,9 +70,9 @@
     border-radius: 4px;
     display: none;
   }
-  #annotation-canvas.laser  { cursor: none; }
-  #annotation-canvas.draw   { cursor: crosshair; }
-  #annotation-canvas.box    { cursor: crosshair; }
+  #annotation-canvas.laser { cursor: none; }
+  #annotation-canvas.draw  { cursor: crosshair; }
+  #annotation-canvas.box   { cursor: crosshair; }
 
   /* ── Annotation toolbar ── */
   #annotation-toolbar {
@@ -105,12 +105,13 @@
   }
   .ann-color.active { border-color: white; }
 
-  /* ── Demo section ── */
-  #demo-wrap { max-width: 900px; width: 100%; }
-  #demo-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.4rem; }
-
-  #demo-play {
+  /* ── Demo (GIF) view ── */
+  #demo-wrap {
+    max-width: 900px;
+    width: 100%;
     position: relative;
+  }
+  #demo-play {
     cursor: pointer;
     border: 1px solid #444;
     border-radius: 4px;
@@ -137,8 +138,7 @@
     border-color: transparent transparent transparent rgba(255,255,255,0.9);
     margin-left: 5px;
   }
-
-  #demo-gif-wrap { position: relative; }
+  #demo-player { position: relative; }
   #demo-gif {
     width: 100%;
     border: 1px solid #444;
@@ -146,18 +146,19 @@
     background: #111;
     display: block;
   }
-  #demo-pause-canvas {
+  /* Freeze-frame canvas drawn over the GIF when paused */
+  #demo-freeze {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
     border-radius: 4px;
     display: none;
+    cursor: default;
   }
-
   #demo-controls {
     display: none;
     gap: 0.5rem;
-    margin-top: 0.4rem;
+    margin-top: 0.5rem;
     align-items: center;
   }
   #demo-controls.visible { display: flex; }
@@ -171,7 +172,6 @@
     cursor: pointer;
   }
   .ctrl-btn:hover { background: #3a3a6a; }
-
   #demo-pending {
     background: #222;
     border: 1px dashed #444;
@@ -179,7 +179,7 @@
     color: #666;
     font-size: 0.85rem;
     text-align: center;
-    padding: 1.5rem;
+    padding: 3rem;
   }
 
   /* ── Nav bar ── */
@@ -204,12 +204,12 @@
   }
   button:hover { background: #4d6490; }
   button:disabled { background: #333; color: #555; cursor: default; }
-
-  #slide-dots { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; max-width: 400px; }
+  #slide-dots { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; max-width: 500px; }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: #444; cursor: pointer; flex-shrink: 0; }
   .dot.active { background: #7aa0d4; }
-  .dot.has-gif { background: #5a8a5a; }
-  .dot.has-gif.active { background: #8fd48f; }
+  .dot.is-demo { background: #5a8a5a; border-radius: 2px; }
+  .dot.is-demo.active { background: #8fd48f; }
+  .dot.is-pending { background: #4a4a2a; border-radius: 2px; }
 </style>
 </head>
 <body>
@@ -223,9 +223,9 @@
 </div>
 
 <div id="content">
-  <div id="slide-title">
-    <span id="slide-title-text"></span>
-    <button id="annotate-btn" onclick="toggleAnnotation()" title="Annotate (A)" style="font-size:0.75rem;padding:0.25rem 0.6rem;background:#2a2a4a;border:1px solid #555;color:#ccc">&#9998; Annotate</button>
+  <div id="entry-title">
+    <span id="entry-title-text"></span>
+    <button id="annotate-btn" onclick="toggleAnnotation()" title="Annotate (A)" style="font-size:0.75rem;padding:0.25rem 0.6rem;background:#2a2a4a;border:1px solid #555;color:#ccc;display:none">&#9998; Annotate</button>
   </div>
 
   <div id="annotation-toolbar">
@@ -240,25 +240,24 @@
     <button class="ann-btn" onclick="toggleAnnotation()" style="margin-left:auto">Done</button>
   </div>
 
-  <div id="slide-img-wrap">
+  <!-- Slide view -->
+  <div id="slide-wrap" style="display:none">
     <img id="slide-img" src="" alt="">
     <canvas id="annotation-canvas"></canvas>
   </div>
 
+  <!-- Demo view -->
   <div id="demo-wrap" style="display:none">
-    <div id="demo-label">Demo</div>
-    <div id="demo-play" onclick="startDemo()" style="display:none">
-      <div class="play-icon"></div>
-    </div>
-    <div id="demo-gif-wrap" style="display:none">
+    <div id="demo-play" onclick="startDemo()"><div class="play-icon"></div></div>
+    <div id="demo-player" style="display:none">
       <img id="demo-gif" src="" alt="">
-      <canvas id="demo-pause-canvas"></canvas>
+      <canvas id="demo-freeze"></canvas>
     </div>
     <div id="demo-controls">
       <button class="ctrl-btn" id="btn-playpause" onclick="togglePlayPause()">&#9646;&#9646; Pause</button>
       <button class="ctrl-btn" onclick="replayDemo()">&#8635; Replay</button>
     </div>
-    <div id="demo-pending" style="display:none">Recording pending</div>
+    <div id="demo-pending" style="display:none">Recording coming soon</div>
   </div>
 </div>
 
@@ -269,7 +268,8 @@
 </div>
 
 <script>
-const slides = [
+// ── Data ─────────────────────────────────────────────────────────────────────
+const slideData = [
   { n:  1, img: "slide-01.png", title: "", gif: null, part: null },
   { n:  2, img: "slide-02.png", title: "Today's Topics", gif: null, part: null },
   { n:  3, img: "slide-03.png", title: "", gif: null, part: "Part 1: SSH Setup" },
@@ -311,97 +311,99 @@ const slides = [
   { n: 39, img: "slide-39.png", title: "", gif: null, part: null },
 ];
 
-// ── Part labels ──────────────────────────────────────────────────────────────
+// Build part label map
 let partLabels = {};
 let cp = "";
-slides.forEach(s => { if (s.part) cp = s.part; partLabels[s.n] = cp; });
+slideData.forEach(s => { if (s.part) cp = s.part; partLabels[s.n] = cp; });
 
-// ── State ────────────────────────────────────────────────────────────────────
+// Build flat entries: each slide, then its demo entry (if any) immediately after
+const entries = [];
+slideData.forEach(s => {
+  entries.push({ type: 'slide', slide: s });
+  if (s.gif) {
+    entries.push({ type: 'demo', slide: s });
+  }
+});
+
+// ── State ─────────────────────────────────────────────────────────────────────
 let current = 0;
-let pendingGif = null;
 let gifPlaying = false;
+let currentGifSrc = null;
 
-// ── GIF controls ─────────────────────────────────────────────────────────────
+// ── GIF player ────────────────────────────────────────────────────────────────
 function startDemo() {
-  const gif     = document.getElementById('demo-gif');
-  const gifWrap = document.getElementById('demo-gif-wrap');
-  const play    = document.getElementById('demo-play');
+  const s = entries[current].slide;
+  currentGifSrc = s.gif;
+  const gif      = document.getElementById('demo-gif');
+  const player   = document.getElementById('demo-player');
+  const playBtn  = document.getElementById('demo-play');
   const controls = document.getElementById('demo-controls');
-  pendingGif = slides[current].gif;
-  gif.src = pendingGif;
-  gifWrap.style.display = 'block';
-  play.style.display = 'none';
+  gif.src = currentGifSrc;
+  player.style.display = 'block';
+  playBtn.style.display = 'none';
   controls.classList.add('visible');
   document.getElementById('btn-playpause').textContent = '⏸ Pause';
   gifPlaying = true;
 }
 
 function togglePlayPause() {
-  if (gifPlaying) {
-    pauseGif();
-  } else {
-    resumeGif();
-  }
+  gifPlaying ? pauseGif() : resumeGif();
 }
 
 function pauseGif() {
   const gif    = document.getElementById('demo-gif');
-  const canvas = document.getElementById('demo-pause-canvas');
-  canvas.width  = gif.naturalWidth  || gif.offsetWidth;
-  canvas.height = gif.naturalHeight || gif.offsetHeight;
-  canvas.getContext('2d').drawImage(gif, 0, 0, canvas.width, canvas.height);
-  gif.style.display = 'none';
-  canvas.style.display = 'block';
-  document.getElementById('btn-playpause').textContent = '▶ Play';
+  const freeze = document.getElementById('demo-freeze');
+  // Size the canvas to match the gif's rendered size exactly
+  freeze.width  = gif.offsetWidth;
+  freeze.height = gif.offsetHeight;
+  freeze.getContext('2d').drawImage(gif, 0, 0, freeze.width, freeze.height);
+  freeze.style.display = 'block';
+  document.getElementById('btn-playpause').textContent = '▶ Resume';
   gifPlaying = false;
 }
 
 function resumeGif() {
   const gif    = document.getElementById('demo-gif');
-  const canvas = document.getElementById('demo-pause-canvas');
-  const src = gif.src || pendingGif;
+  const freeze = document.getElementById('demo-freeze');
+  // Restart GIF by resetting src
   gif.src = '';
-  gif.src = src;
-  gif.style.display = 'block';
-  canvas.style.display = 'none';
+  gif.src = currentGifSrc;
+  freeze.style.display = 'none';
   document.getElementById('btn-playpause').textContent = '⏸ Pause';
   gifPlaying = true;
 }
 
 function replayDemo() {
   const gif    = document.getElementById('demo-gif');
-  const canvas = document.getElementById('demo-pause-canvas');
+  const freeze = document.getElementById('demo-freeze');
   gif.src = '';
-  gif.src = pendingGif;
-  gif.style.display = 'block';
-  canvas.style.display = 'none';
+  gif.src = currentGifSrc;
+  freeze.style.display = 'none';
   document.getElementById('btn-playpause').textContent = '⏸ Pause';
   gifPlaying = true;
 }
 
-function resetDemo() {
+function resetDemoPlayer() {
   const gif     = document.getElementById('demo-gif');
-  const canvas  = document.getElementById('demo-pause-canvas');
-  const gifWrap = document.getElementById('demo-gif-wrap');
-  const play    = document.getElementById('demo-play');
+  const freeze  = document.getElementById('demo-freeze');
+  const player  = document.getElementById('demo-player');
+  const playBtn = document.getElementById('demo-play');
   const controls = document.getElementById('demo-controls');
   gif.src = '';
-  gif.style.display = 'none';
-  canvas.style.display = 'none';
-  gifWrap.style.display = 'none';
-  play.style.display = 'none';
+  freeze.style.display = 'none';
+  player.style.display = 'none';
+  playBtn.style.display = 'flex';
   controls.classList.remove('visible');
-  pendingGif = null;
+  currentGifSrc = null;
   gifPlaying = false;
 }
 
-// ── Annotation ───────────────────────────────────────────────────────────────
+// ── Annotation ────────────────────────────────────────────────────────────────
 let annotating = false;
 let annMode    = 'laser';
 let annColor   = '#ff3333';
 let annDrawing = false;
-let annStart   = null;
-let annPaths   = [];        // stored shapes for draw/box modes
+let annPaths   = [];
 let laserPos   = null;
 let laserRaf   = null;
 
@@ -420,7 +422,6 @@ function toggleAnnotation() {
     syncCanvas();
     annCanvas.style.display = 'block';
     setMode(annMode);
-    if (annMode === 'laser') startLaserLoop();
   } else {
     toolbar.classList.remove('active');
     btn.style.background = '#2a2a4a';
@@ -433,31 +434,23 @@ function toggleAnnotation() {
 
 function syncCanvas() {
   const img = document.getElementById('slide-img');
-  annCanvas.width  = img.naturalWidth  || img.offsetWidth;
-  annCanvas.height = img.naturalHeight || img.offsetHeight;
+  annCanvas.width  = img.offsetWidth;
+  annCanvas.height = img.offsetHeight;
   redrawPaths();
 }
 
 function setMode(mode) {
   annMode = mode;
-  ['laser','draw','box'].forEach(m => {
-    document.getElementById('mode-' + m).classList.toggle('active', m === mode);
-  });
+  ['laser','draw','box'].forEach(m =>
+    document.getElementById('mode-' + m).classList.toggle('active', m === mode));
   annCanvas.className = mode;
-  if (mode === 'laser') {
-    startLaserLoop();
-  } else {
-    stopLaserLoop();
-    redrawPaths();
-  }
+  if (mode === 'laser') startLaserLoop(); else { stopLaserLoop(); redrawPaths(); }
 }
 
 function setColor(c) {
   annColor = c;
-  ['red','yellow','cyan'].forEach(id => {
-    document.getElementById('color-' + id).classList.remove('active');
-  });
   const map = { '#ff3333': 'red', '#ffdd00': 'yellow', '#00ccff': 'cyan' };
+  Object.values(map).forEach(id => document.getElementById('color-' + id).classList.remove('active'));
   if (map[c]) document.getElementById('color-' + map[c]).classList.add('active');
 }
 
@@ -467,7 +460,7 @@ function clearAnnotations() {
 }
 
 function canvasPos(e) {
-  const r = annCanvas.getBoundingClientRect();
+  const r  = annCanvas.getBoundingClientRect();
   const sx = annCanvas.width  / r.width;
   const sy = annCanvas.height / r.height;
   return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
@@ -475,24 +468,21 @@ function canvasPos(e) {
 
 function redrawPaths() {
   annCtx.clearRect(0, 0, annCanvas.width, annCanvas.height);
-  annPaths.forEach(p => drawShape(p));
+  annPaths.forEach(p => {
+    annCtx.strokeStyle = p.color;
+    annCtx.lineWidth   = p.size;
+    annCtx.lineCap     = 'round';
+    annCtx.lineJoin    = 'round';
+    if (p.type === 'path') {
+      annCtx.beginPath();
+      p.pts.forEach((pt, i) => i === 0 ? annCtx.moveTo(pt.x, pt.y) : annCtx.lineTo(pt.x, pt.y));
+      annCtx.stroke();
+    } else if (p.type === 'box') {
+      annCtx.strokeRect(p.x, p.y, p.w, p.h);
+    }
+  });
 }
 
-function drawShape(p) {
-  annCtx.strokeStyle = p.color;
-  annCtx.lineWidth = p.size;
-  annCtx.lineCap = 'round';
-  annCtx.lineJoin = 'round';
-  if (p.type === 'path') {
-    annCtx.beginPath();
-    p.pts.forEach((pt, i) => i === 0 ? annCtx.moveTo(pt.x, pt.y) : annCtx.lineTo(pt.x, pt.y));
-    annCtx.stroke();
-  } else if (p.type === 'box') {
-    annCtx.strokeRect(p.x, p.y, p.w, p.h);
-  }
-}
-
-// Laser pointer loop — animates the dot on mousemove
 function startLaserLoop() {
   if (laserRaf) return;
   function frame() {
@@ -533,75 +523,86 @@ annCanvas.addEventListener('mousemove', e => {
     redrawPaths();
   }
 });
-
 annCanvas.addEventListener('mouseleave', () => { laserPos = null; });
-
 annCanvas.addEventListener('mousedown', e => {
   if (!annotating || annMode === 'laser') return;
   annDrawing = true;
   const pos = canvasPos(e);
-  if (annMode === 'draw') {
-    annPaths.push({ type: 'path', color: annColor, size: 3, pts: [pos] });
-  } else if (annMode === 'box') {
-    annPaths.push({ type: 'box', color: annColor, size: 2.5, x: pos.x, y: pos.y, w: 0, h: 0 });
-  }
+  if (annMode === 'draw') annPaths.push({ type: 'path', color: annColor, size: 3, pts: [pos] });
+  if (annMode === 'box')  annPaths.push({ type: 'box',  color: annColor, size: 2.5, x: pos.x, y: pos.y, w: 0, h: 0 });
 });
-
 annCanvas.addEventListener('mouseup', () => { annDrawing = false; });
 
-// ── Slide render ─────────────────────────────────────────────────────────────
+// ── Render ────────────────────────────────────────────────────────────────────
 function render() {
-  const s = slides[current];
-  document.getElementById('slide-img').src = s.img;
-  document.getElementById('slide-img').alt = s.title || `Slide ${s.n}`;
-  document.getElementById('slide-title-text').textContent = s.title ? `Slide ${s.n} — ${s.title}` : `Slide ${s.n}`;
-  document.getElementById('counter').textContent = `${s.n} / ${slides.length}`;
+  const entry = entries[current];
+  const s     = entry.slide;
+
+  document.getElementById('counter').textContent   = `${current + 1} / ${entries.length}`;
   document.getElementById('part-label').textContent = partLabels[s.n] || "";
 
-  // Reset demo
-  resetDemo();
-  const demoWrap = document.getElementById('demo-wrap');
-  const play     = document.getElementById('demo-play');
-  const pending  = document.getElementById('demo-pending');
-  pending.style.display = 'none';
+  const slideWrap = document.getElementById('slide-wrap');
+  const demoWrap  = document.getElementById('demo-wrap');
+  const annBtn    = document.getElementById('annotate-btn');
 
-  if (s.gif === null) {
-    demoWrap.style.display = 'none';
-  } else if (s.gif === 'pending') {
-    demoWrap.style.display = 'block';
-    pending.style.display = 'block';
+  if (entry.type === 'slide') {
+    // ── Slide page ──
+    slideWrap.style.display = 'block';
+    demoWrap.style.display  = 'none';
+    annBtn.style.display    = 'inline-block';
+
+    document.getElementById('slide-img').src = s.img;
+    document.getElementById('entry-title-text').textContent =
+      s.title ? `Slide ${s.n} — ${s.title}` : `Slide ${s.n}`;
+
+    annPaths = [];
+    if (annotating) {
+      document.getElementById('slide-img').onload = syncCanvas;
+      annCanvas.style.display = 'block';
+    } else {
+      annCanvas.style.display = 'none';
+      stopLaserLoop();
+    }
+
   } else {
-    demoWrap.style.display = 'block';
-    pendingGif = s.gif;
-    play.style.display = 'flex';
+    // ── Demo page ──
+    slideWrap.style.display = 'none';
+    demoWrap.style.display  = 'block';
+    annBtn.style.display    = 'none';
+
+    document.getElementById('entry-title-text').textContent =
+      `Demo — ${s.title || 'Slide ' + s.n}`;
+
+    resetDemoPlayer();
+
+    const pending = document.getElementById('demo-pending');
+    if (s.gif === 'pending') {
+      document.getElementById('demo-play').style.display = 'none';
+      pending.style.display = 'block';
+    } else {
+      document.getElementById('demo-play').style.display = 'flex';
+      pending.style.display = 'none';
+    }
+
+    // Turn off annotation when entering demo view
+    if (annotating) toggleAnnotation();
   }
 
   document.getElementById('btn-prev').disabled = current === 0;
-  document.getElementById('btn-next').disabled = current === slides.length - 1;
+  document.getElementById('btn-next').disabled = current === entries.length - 1;
   document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
-
-  // Reset annotation canvas for new slide
-  annPaths = [];
-  if (annotating) {
-    document.getElementById('slide-img').onload = syncCanvas;
-    annCanvas.style.display = 'block';
-    if (annMode === 'laser') startLaserLoop();
-  } else {
-    annCanvas.style.display = 'none';
-  }
-
   document.getElementById('content').scrollTo(0, 0);
 }
 
 function go(dir) {
   const next = current + dir;
-  if (next >= 0 && next < slides.length) { current = next; render(); }
+  if (next >= 0 && next < entries.length) { current = next; render(); }
 }
 
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
   if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
-  if (e.key === 'a' || e.key === 'A') toggleAnnotation();
+  if ((e.key === 'a' || e.key === 'A') && entries[current].type === 'slide') toggleAnnotation();
   if (e.key === 'Escape' && annotating) toggleAnnotation();
   if (annotating) {
     if (e.key === '1') setMode('laser');
@@ -611,12 +612,17 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ── Dots ─────────────────────────────────────────────────────────────────────
+// ── Build dots ─────────────────────────────────────────────────────────────────
 const dotsEl = document.getElementById('slide-dots');
-slides.forEach((s, i) => {
+entries.forEach((e, i) => {
   const d = document.createElement('div');
-  d.className = 'dot' + (s.gif && s.gif !== 'pending' ? ' has-gif' : '');
-  d.title = s.title ? `Slide ${s.n}: ${s.title}` : `Slide ${s.n}`;
+  if (e.type === 'demo') {
+    d.className = e.slide.gif === 'pending' ? 'dot is-pending' : 'dot is-demo';
+    d.title = `Demo: ${e.slide.title || 'Slide ' + e.slide.n}`;
+  } else {
+    d.className = 'dot';
+    d.title = e.slide.title ? `Slide ${e.slide.n}: ${e.slide.title}` : `Slide ${e.slide.n}`;
+  }
   d.onclick = () => { current = i; render(); };
   dotsEl.appendChild(d);
 });
