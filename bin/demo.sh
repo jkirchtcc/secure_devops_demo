@@ -7,6 +7,12 @@ cd "$(dirname "$0")/.."
 # Ensure ~/.local/bin is in PATH (ansible installed via uv)
 export PATH="$HOME/.local/bin:$PATH"
 
+# --test flag: run all parts without pausing (for automated testing)
+TEST_MODE=0
+if [ "${1:-}" = "--test" ]; then
+    TEST_MODE=1
+fi
+
 # ── Colors ────────────────────────────────────────────────────────────────────
 BOLD='\033[1m'
 CYAN='\033[0;36m'
@@ -30,6 +36,7 @@ slide() {
 }
 
 pause() {
+    if [ "$TEST_MODE" -eq 1 ]; then return; fi
     echo
     echo -e "${GREEN}[Press ENTER to continue]${RESET}"
     read -r || true
@@ -70,9 +77,13 @@ echo "  4 - Storing Secrets      (slides 21-26)"
 echo "  5 - SSHD Hardening       (slides 28-36)"
 echo "  6 - Ad-hoc Commands      (slide 37)"
 echo
-echo -e "Enter part number to jump to a specific part, or press ENTER to start from Part 1:"
-read -r START_PART || true
-START_PART=${START_PART:-1}
+if [ "$TEST_MODE" -eq 1 ]; then
+    START_PART=1
+else
+    echo -e "Enter part number to jump to a specific part, or press ENTER to start from Part 1:"
+    read -r START_PART || true
+    START_PART=${START_PART:-1}
+fi
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PART 1 — SSH Setup Demo
