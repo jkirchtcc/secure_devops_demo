@@ -158,10 +158,11 @@ fi
 if [ "$START_PART" -le 5 ]; then
 header "Part 5: SSHD Hardening  (adding 3 target VMs now)"
 
-echo -e "${RED}${BOLD}NOTE: Target VMs must be in a FRESH state for Part 5.${RESET}"
-echo -e "      If you have run this before, recreate them first:"
-echo -e "      ${BOLD}sudo virsh destroy target-{1,2,3} && bin/create_target_vms.sh${RESET}"
-echo -e "      (run from the HOST, not this VM)"
+echo -e "${YELLOW}${BOLD}Target VMs must be in a fresh state for Part 5.${RESET}"
+echo -e "  Run this on korell, then press ENTER:"
+echo -e ""
+echo -e "  ${BOLD}bin/reset_target_vms.sh${RESET}"
+echo -e ""
 pause
 
 slide 28 "Let's spin up more machines"
