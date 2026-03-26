@@ -990,12 +990,8 @@ ok: [192.168.122.103]
 % Slide 33 - Wait, what?
 % ==============================================================
 \begin{frame}[fragile]{Switch SSH config to \texttt{ansible\_user}}
-\begin{term}
-ansible_user@ansible:~/secure_devops_demo$ bin/update_ssh_config.sh
-Updated ~/.ssh/config -- servers now connect as ansible_user
-\end{term}
-\vspace{0.2cm}
 \begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$ cat ~/.ssh/config
 # BEGIN cyberforge-demo
 Host server1
     HostName 192.168.122.101

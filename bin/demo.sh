@@ -207,7 +207,8 @@ run ansible-playbook add_ansible_user.yml
 pause
 
 slide 33 "Switch SSH config to ansible_user"
-before_after "~/.ssh/config" "$HOME/.ssh/config" "bin/update_ssh_config.sh"
+bin/update_ssh_config.sh > /dev/null
+run cat ~/.ssh/config
 pause
 
 slide 34 "Verify ansible_user can connect"
