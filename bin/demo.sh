@@ -8,10 +8,14 @@ cd "$(dirname "$0")/.."
 export PATH="$HOME/.local/bin:$PATH"
 
 # --test flag: run all parts without pausing (for automated testing)
+# Usage: bin/demo.sh [--test] [start_part] [end_part]
 TEST_MODE=0
 if [ "${1:-}" = "--test" ]; then
     TEST_MODE=1
+    shift
 fi
+ARG_START="${1:-}"
+ARG_END="${2:-6}"
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 BOLD='\033[1m'
@@ -86,17 +90,20 @@ echo "  5 - SSHD Hardening       (slides 28-36)"
 echo "  6 - Ad-hoc Commands      (slide 37)"
 echo
 if [ "$TEST_MODE" -eq 1 ]; then
-    START_PART=1
+    START_PART="${ARG_START:-1}"
+elif [ -n "$ARG_START" ]; then
+    START_PART="$ARG_START"
 else
     echo -e "Enter part number to jump to a specific part, or press ENTER to start from Part 1:"
     read -r START_PART || true
     START_PART=${START_PART:-1}
 fi
+END_PART="$ARG_END"
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PART 1 — SSH Setup Demo
 # ══════════════════════════════════════════════════════════════════════════════
-if [ "$START_PART" -le 1 ]; then
+if [ "$START_PART" -le 1 ] && [ "$END_PART" -ge 1 ]; then
 header "Part 1: SSH Setup Demo  (control VM only — no target VMs yet)"
 
 slide 4 "Generate SSH Keys"
@@ -114,7 +121,7 @@ fi
 # ══════════════════════════════════════════════════════════════════════════════
 # PART 2 — Ansible Setup Demo
 # ══════════════════════════════════════════════════════════════════════════════
-if [ "$START_PART" -le 2 ]; then
+if [ "$START_PART" -le 2 ] && [ "$END_PART" -ge 2 ]; then
 header "Part 2: Ansible Setup Demo  (control VM only)"
 
 slide 13 "Ansible Installed"
@@ -126,7 +133,7 @@ fi
 # ══════════════════════════════════════════════════════════════════════════════
 # PART 3 — Ansible Demo
 # ══════════════════════════════════════════════════════════════════════════════
-if [ "$START_PART" -le 3 ]; then
+if [ "$START_PART" -le 3 ] && [ "$END_PART" -ge 3 ]; then
 header "Part 3: Ansible Demo  (control VM only)"
 
 slide 17 "Our First Ansible Playbook"
@@ -150,7 +157,7 @@ fi
 # ══════════════════════════════════════════════════════════════════════════════
 # PART 4 — Storing Secrets
 # ══════════════════════════════════════════════════════════════════════════════
-if [ "$START_PART" -le 4 ]; then
+if [ "$START_PART" -le 4 ] && [ "$END_PART" -ge 4 ]; then
 header "Part 4: Storing Secrets  (control VM only)"
 
 slide 22 "Ansible Vault"
@@ -174,7 +181,7 @@ fi
 # ══════════════════════════════════════════════════════════════════════════════
 # PART 5 — SSHD Hardening
 # ══════════════════════════════════════════════════════════════════════════════
-if [ "$START_PART" -le 5 ]; then
+if [ "$START_PART" -le 5 ] && [ "$END_PART" -ge 5 ]; then
 header "Part 5: SSHD Hardening  (adding 3 target VMs now)"
 
 echo -e "${YELLOW}${BOLD}Target VMs must be in a fresh state for Part 5.${RESET}"
@@ -236,7 +243,7 @@ fi
 # ══════════════════════════════════════════════════════════════════════════════
 # PART 6 — Ad-hoc Commands
 # ══════════════════════════════════════════════════════════════════════════════
-if [ "$START_PART" -le 6 ]; then
+if [ "$START_PART" -le 6 ] && [ "$END_PART" -ge 6 ]; then
 header "Part 6: Ad-hoc Commands"
 
 slide 37 "Ad-hoc commands"

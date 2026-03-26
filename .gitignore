@@ -18,3 +18,4 @@ inventory-local.ini
 *.toc
 *.vrb
 *.listing
+docs/recordings/
