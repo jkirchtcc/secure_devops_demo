@@ -43,7 +43,15 @@ pause() {
 }
 
 run() {
-    echo -e "${BOLD}\$ $*${RESET}"
+    local display=()
+    for arg in "$@"; do
+        if [[ "$arg" == *" "* ]]; then
+            display+=("\"$arg\"")
+        else
+            display+=("$arg")
+        fi
+    done
+    echo -e "${BOLD}\$ ${display[*]}${RESET}"
     "$@"
 }
 
