@@ -1,0 +1,1272 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Theme and colors to match the blue/gray style
+\usetheme{default}
+\usecolortheme{default}
+
+% Custom colors
+\definecolor{slidebg}{RGB}{55,55,60}
+\definecolor{bluebar}{RGB}{60,80,120}
+\definecolor{darkterm}{RGB}{25,25,25}
+\definecolor{termgreen}{RGB}{100,220,100}
+\definecolor{termwhite}{RGB}{220,220,220}
+\definecolor{termyellow}{RGB}{220,220,100}
+\definecolor{termred}{RGB}{220,80,80}
+\definecolor{termcyan}{RGB}{100,220,220}
+\definecolor{highlight}{RGB}{200,0,0}
+\definecolor{arrowred}{RGB}{220,30,30}
+
+% White background, standard dark text
+\setbeamercolor{frametitle}{bg=bluebar,fg=black}
+\setbeamercolor{normal text}{fg=black}
+\setbeamercolor{structure}{fg=bluebar}
+
+% Remove navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+% Frame title template with blue bar
+\setbeamertemplate{frametitle}{
+  \vspace{-0.1cm}
+  \begin{beamercolorbox}[wd=\paperwidth,ht=1.2cm,dp=0.3cm]{frametitle}
+    \hspace{0.5cm}\usebeamerfont{frametitle}\insertframetitle
+  \end{beamercolorbox}
+}
+
+\setbeamerfont{frametitle}{size=\LARGE}
+
+% Packages
+\usepackage[T1]{fontenc}
+\usepackage{helvet}                    % Helvetica — matches the original slide font
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{listings}
+\usepackage{textcomp}
+\usepackage{tikz}
+% Base listing settings (no backgroundcolor — tcolorbox handles the box)
+\lstset{
+  basicstyle=\ttfamily\scriptsize\color{termwhite},
+  breaklines=true,
+  showstringspaces=false,
+  upquote=true,
+  columns=fullflexible,
+  aboveskip=0pt,
+  belowskip=0pt,
+}
+
+\lstdefinestyle{terminal}{ basicstyle=\ttfamily\scriptsize\color{termwhite} }
+\lstdefinestyle{terminalsmall}{ basicstyle=\ttfamily\tiny\color{termwhite} }
+\lstdefinestyle{config}{ basicstyle=\ttfamily\small\color{termwhite} }
+
+\usepackage{tcolorbox}
+\tcbuselibrary{listings,skins}
+
+% tcolorbox wraps the listing in one continuous colored box (no per-line stripes)
+\newtcblisting{term}{
+  colback=darkterm, colframe=darkterm,
+  arc=4pt, boxrule=0pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  listing only,
+  listing options={style=terminal},
+}
+
+\newtcblisting{termsmall}{
+  colback=darkterm, colframe=darkterm,
+  arc=4pt, boxrule=0pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  listing only,
+  listing options={style=terminalsmall},
+}
+
+\newtcblisting{conf}{
+  colback=darkterm, colframe=darkterm,
+  arc=4pt, boxrule=0pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  listing only,
+  listing options={style=config},
+}
+
+\title{\Huge Secure DevOps}
+\subtitle{\Large Setting up a secure environment for Ansible}
+\author{}
+\date{}
+
+\begin{document}
+
+% ==============================================================
+% Slide 1 - Title
+% ==============================================================
+\begin{frame}
+\vspace{2cm}
+\begin{beamercolorbox}[wd=\paperwidth,ht=3cm,dp=1cm]{frametitle}
+  \hspace{1cm}{\Huge\textbf{Secure DevOps}}\\[0.3cm]
+  \hspace{1cm}{\Large Setting up a secure environment for Ansible}
+\end{beamercolorbox}
+\vfill
+\hfill\begin{minipage}{0.3\textwidth}
+\raggedleft
+{\small PRESENTED BY:}\\
+{\Large\textbf{Joel Kirch}}
+\end{minipage}\hspace{1cm}
+\vspace{0.5cm}
+
+\begin{center}
+{\tiny\textcopyright\ CC BY-NC-ND --- This license enables reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.}
+\end{center}
+\end{frame}
+
+% ==============================================================
+% Slide 2 - Today's Topics
+% ==============================================================
+\begin{frame}{Today's Topics}
+\begin{itemize}
+  \item Many demos and tutorials skip over how to set up a secure environment for Ansible
+  \begin{itemize}
+    \item SSH \& GPG Keys, SSH-Agent, GPG-Agent
+    \item \texttt{pass} -- The Unix Password Manager
+    \item Ansible Vault
+  \end{itemize}
+  \item \textbf{SSH Setup Demo}
+  \item \textbf{Ansible Setup Demo}
+  \item \textbf{Ansible Demo}
+\end{itemize}
+\end{frame}
+
+% ==============================================================
+% Slide 3 - Section Divider: SSH Setup Demo
+% ==============================================================
+\begin{frame}[plain]
+\vspace{3cm}
+\begin{beamercolorbox}[wd=\paperwidth,ht=2.5cm,dp=0.8cm]{frametitle}
+  \centering{\Huge SSH Setup Demo}
+\end{beamercolorbox}
+\end{frame}
+
+% ==============================================================
+% Slide 4 - Generate SSH Keys
+% ==============================================================
+\begin{frame}[fragile]{Generate SSH Keys}
+\begin{itemize}
+  \item Generate an ED25519 SSH key with the comment ``DemoSSHKey'' and save it using that same filename -- \textcolor{highlight}{USE A PASSWORD to protect your SSH Key.}
+\end{itemize}
+\vspace{0.2cm}
+\begin{conf}
+ssh-keygen -t ed25519 -C "DemoSSHKey" -f DemoSSHKey
+\end{conf}
+\begin{itemize}
+  \item This command breaks down as follows:
+  \begin{itemize}
+    \item \textbf{\texttt{-t ed25519}}: Specifies the type of key to generate (ED25519).
+    \item \textbf{\texttt{-C "DemoSSHKey"}}: Adds the comment ``DemoSSHKey'' to the key
+    \item \textbf{\texttt{-f DemoSSHKey}}: Saves the private key to a file named \texttt{DemoSSHKey} and the public key to a file named \texttt{DemoSSHKey.pub}.
+  \end{itemize}
+  \item After running this command, you'll have two files:
+  \begin{itemize}
+    \item DemoSSHKey (the private key)
+    \item DemoSSHKey.pub (the corresponding public key)
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+% ==============================================================
+% Slide 5 - Upload SSH Public Key
+% ==============================================================
+\begin{frame}[fragile]{Upload SSH Public Key}
+\begin{itemize}
+  \item Copy your public SSH key and upload it to your server or cloud provider
+  \item The public key is safe to share -- that's the whole point
+  \item For cloud providers (e.g., DigitalOcean), paste the key in the SSH Keys section of the console
+\end{itemize}
+\vspace{0.3cm}
+\begin{conf}
+cat ~/.ssh/DemoSSHKey.pub
+\end{conf}
+\end{frame}
+
+% ==============================================================
+% Slide 6 - RSA 4096 vs ED25519
+% ==============================================================
+\begin{frame}[fragile]{RSA 4096 vs ED25519}
+\begin{termsmall}
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQD4kiiiQH2Avx4rzOsNf
+fLvnEZAMuEF7CA0cpg3L6BO1aFu6jEFvr/NonnL1tPN/OwDoTeEMG4k7B
+N3dAXFFkgFAGAT+2RNvTnFb+nhyReeEkwZg+Iw9+stfxITrtvKgoNQ76n
+884P79FciMbn9QP6BmCXsTUQhMFMvWHP03rwYXFt9f/pUgW6QCmpIw5i3f
+KgQf0WGFVsjPWXMCXrNiIDDk/71VUqXg8FKFUvQUG1DGDcspPdel0gsJSX
+y14Wov4l4sSlViYqe6WQXKA6aIvsQGk+DfZErKPWMg+20LCAYYQeD1+r4Q
+iLbMHbHNK26WBmkjzv0pgkbEdBdrscRaTi8AFCWelyqsoxxz4GEK0CG7NoB
+idl0KTf95OqDpmAnZcwRDTLWbYlLBxgL8+Pmjgku9Pnzhf2qipQs94A+te
+EgZiPlpIXSitqcBmJ0aamCTMrYE9BkylM7hvGkfx7QZYWktQkgdPKKl8ac
+KDM77nc1SWc1vQ2pHhq53xk08cNWrOMZaxqZaDMGncxp83GnOEjkZhr6Xw
+9T5/ Demo_SSH_RSA_Key
+\end{termsmall}
+\vspace{0.2cm}
+\begin{term}
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDGwqTc2eyAVxspuLyNERj
+9ktEHdkRwdvKpAaO8ZP68 Demo_SSH_ED25519_Key
+\end{term}
+\end{frame}
+
+% ==============================================================
+% Slide 7 - Configure SSH Client
+% ==============================================================
+\begin{frame}[fragile]{Configure SSH Client}
+\begin{conf}
+Host ansible
+    HostName 192.168.122.100
+    User root
+    IdentityFile ~/.ssh/DemoSSHKey
+\end{conf}
+\vspace{0.3cm}
+\textbf{\texttt{Host ansible}}: Creates an alias ``ansible'' for easy connection.\\[0.2cm]
+\textbf{\texttt{HostName 192.168.122.100}}: Sets the server's IP address.\\[0.2cm]
+\textbf{\texttt{User root}}: Uses ``root'' as the default username.\\[0.2cm]
+\textbf{\texttt{IdentityFile \textasciitilde/.ssh/DemoSSHKey}}: Specifies the SSH key for secure login.
+\end{frame}
+
+% ==============================================================
+% Slide 8 - SSH to ansible, part 1
+% ==============================================================
+\begin{frame}[fragile]{SSH to ansible, part 1}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{termsmall}
+$ ssh ansible
+Enter passphrase for key '~/.ssh/DemoSSHKey':
+Welcome to Ubuntu 24.04 LTS
+
+ System load:  0.08     Processes:        104
+ Usage of /:   19.2%    Users logged in:  0
+ Memory usage: 36%      IPv4: 192.168.122.100
+
+root@ansible:~#
+\end{termsmall}
+\end{column}
+\begin{column}{0.42\textwidth}
+\begin{itemize}
+  \item Notice that I have to enter a password to use my SSH key.
+  \item Let's fix that by using SSH agent
+  \item Add this line to your config file:\\
+    \textbf{\texttt{AddKeysToAgent yes}}
+\end{itemize}
+\vspace{0.2cm}
+\textcolor{arrowred}{$\Rightarrow$}
+\begin{termsmall}
+Host ansible
+    HostName 192.168.122.100
+    User root
+    AddKeysToAgent yes
+    IdentityFile ~/.ssh/DemoSSHKey
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 9 - CyberSecurity Time
+% ==============================================================
+\begin{frame}[fragile]{CyberSecurity Time}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{itemize}
+  \item Update the \texttt{sshd\_config} on the ansible server
+  \begin{itemize}
+    \item Disable root login: \textbf{\texttt{PermitRootLogin no}} ensures that root cannot access the server via SSH.
+    \item Enforce public key authentication: \textbf{\texttt{PubkeyAuthentication yes}} and \textbf{\texttt{PasswordAuthentication no}} require that all users authenticate with an SSH key.
+    \item Do not forget to restart SSHD: \textbf{\texttt{systemctl restart ssh.service}}
+  \end{itemize}
+\end{itemize}
+\end{column}
+\begin{column}{0.42\textwidth}
+\begin{termsmall}
+# Authentication:
+
+#LoginGraceTime 2m
+PermitRootLogin no          <--
+#StrictModes yes
+#MaxAuthTries 6
+
+PubkeyAuthentication yes    <--
+
+...
+
+PasswordAuthentication no   <--
+#PermitEmptyPasswords no
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 10 - Update ssh config
+% ==============================================================
+\begin{frame}[fragile]{Update ssh config}
+\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+\begin{itemize}
+  \item Update my ssh client config to use \textbf{\texttt{ansible\_user}} instead of \textbf{\texttt{root}}
+\end{itemize}
+\vspace{0.3cm}
+\begin{term}
+Host ansible
+    HostName 192.168.122.100
+    User ansible_user
+    AddKeysToAgent yes
+    IdentityFile ~/.ssh/DemoSSHKey
+\end{term}
+\end{column}
+\begin{column}{0.52\textwidth}
+\begin{termsmall}
+$ ssh ansible
+root@192.168.122.100: Permission denied
+  (publickey).
+
+$ vim ~/.ssh/config
+
+$ ssh ansible
+Welcome to Ubuntu 24.04 LTS
+...
+ansible_user@ansible:~$
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 11 - SSH Setup Summary
+% ==============================================================
+\begin{frame}{SSH Setup Summary}
+\begin{itemize}
+  \item Created SSH keys, uploaded the public key to cloud provider
+  \item Configured our client to use SSH Agent with SSH keys
+  \item Connected to our ansible server, using SSH keys
+  \item Hardened SSHd on the ansible server
+  \item Verified that our settings worked
+  \item \textbf{QUESTION: Are we doing DevOps?}
+\end{itemize}
+\end{frame}
+
+% ==============================================================
+% Slide 12 - Section Divider: Ansible Setup Demo
+% ==============================================================
+\begin{frame}[plain]
+\vspace{3cm}
+\begin{beamercolorbox}[wd=\paperwidth,ht=2.5cm,dp=0.8cm]{frametitle}
+  \centering{\Huge Ansible Setup Demo}
+\end{beamercolorbox}
+\end{frame}
+
+% ==============================================================
+% Slide 13 - Install Ansible
+% ==============================================================
+\begin{frame}[fragile]{Install Ansible}
+\begin{termsmall}
+ansible_user@ansible:~$ ./install_ansible.sh
+Reading package lists... Done
+Building dependency tree... Done
+...
+The following NEW packages will be installed:
+  python3 python3-pip python3-venv ...
+...
+Do you want to continue? [Y/n]
+\end{termsmall}
+\vspace{0.3cm}
+\begin{itemize}
+  \item Use \texttt{git} to download the install script
+  \item \texttt{chmod +x install\_ansible.sh}
+  \item \texttt{./install\_ansible.sh}
+\end{itemize}
+\end{frame}
+
+% ==============================================================
+% Slide 14 - Logout & Login
+% ==============================================================
+\begin{frame}[fragile]{Logout \& Login}
+\begin{termsmall}
+ansible_user@ansible:~$ ./install_ansible.sh
+...
+~/.local/bin has been added to PATH, but you need to open
+a new terminal or re-login for this PATH change to take effect.
+
+ansible_user@ansible:~$ ansible --version
+ansible [core 2.18.1]
+  config file = None
+  ...
+  python version = 3.12.3
+\end{termsmall}
+\end{frame}
+
+% ==============================================================
+% Slide 15 - Ansible Installed
+% ==============================================================
+\begin{frame}[fragile]{Ansible Installed}
+\begin{term}
+ansible_user@ansible:~$ ansible --version
+ansible [core 2.18.1]
+  config file = None
+  configured module search path =
+    ['/home/ansible_user/.ansible/plugins/modules',
+     '/usr/share/ansible/plugins/modules']
+  ansible python module location =
+    /home/ansible_user/.local/share/uv/...
+  executable location =
+    /home/ansible_user/.local/bin/ansible
+  python version = 3.12.3
+  jinja version = 3.1.4
+  libyaml = True
+\end{term}
+\end{frame}
+
+% ==============================================================
+% Slide 16 - Section Divider: Ansible Demo
+% ==============================================================
+\begin{frame}[plain]
+\vspace{3cm}
+\begin{beamercolorbox}[wd=\paperwidth,ht=2.5cm,dp=0.8cm]{frametitle}
+  \centering{\Huge Ansible Demo}
+\end{beamercolorbox}
+\end{frame}
+
+% ==============================================================
+% Slide 17 - Our First Ansible Playbook
+% ==============================================================
+\begin{frame}[fragile]{Our First Ansible Playbook}
+\begin{columns}[T]
+\begin{column}{0.35\textwidth}
+\begin{itemize}
+  \item Create an inventory file
+  \item Write a playbook
+  \item Run the playbook
+\end{itemize}
+\end{column}
+\begin{column}{0.62\textwidth}
+\begin{termsmall}
+[local]
+localhost ansible_connection=local
+\end{termsmall}
+\vspace{0.1cm}
+\begin{termsmall}
+---
+- name: Ping localhost
+  hosts: local
+  tasks:
+    - name: Ping the localhost
+      ping:
+\end{termsmall}
+\end{column}
+\end{columns}
+\vspace{0.2cm}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$ ansible-playbook ping.yml
+
+PLAY [Ping localhost] *****************************************************
+TASK [Gathering Facts] ****************************************************
+ok: [localhost]
+TASK [Ping the localhost] *************************************************
+ok: [localhost]
+PLAY RECAP ****************************************************************
+localhost           : ok=2    changed=0    unreachable=0    failed=0
+\end{termsmall}
+\end{frame}
+
+% ==============================================================
+% Slide 18 - ansible.cfg
+% ==============================================================
+\begin{frame}[fragile]{ansible.cfg}
+\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+\begin{term}
+[defaults]
+inventory = inventory.ini
+command_warnings = False
+deprecation_warnings = False
+interpreter_python =
+    /usr/bin/python3
+\end{term}
+\vspace{0.3cm}
+Add the inventory location and turn off those warnings
+\end{column}
+\begin{column}{0.52\textwidth}
+Now you don't have to pass the \texttt{-i inventory.ini} each time you run a playbook
+\vspace{0.3cm}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$
+  ansible-playbook ping.yml
+
+PLAY [Ping localhost] *****************
+TASK [Gathering Facts] ****************
+ok: [localhost]
+TASK [Ping the localhost] *************
+ok: [localhost]
+PLAY RECAP ****************************
+localhost  : ok=2  changed=0  failed=0
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 19 - Update ansible with Ansible
+% ==============================================================
+\begin{frame}[fragile]{Update ansible with Ansible}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{term}
+---
+- name: Update and upgrade packages
+    on localhost
+  hosts: local
+  become: yes  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+\end{term}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+  \item Notice that we are using \textbf{\texttt{become}} to use sudo
+  \item It failed?
+  \item Why?
+\end{itemize}
+\end{column}
+\end{columns}
+\vspace{0.2cm}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$ ansible-playbook update.yml
+PLAY [Update and upgrade packages on localhost] ***************************
+TASK [Gathering Facts] ****************************************************
+fatal: [localhost]: FAILED! => {"msg": "sudo: a password is required\n"}
+\end{termsmall}
+\end{frame}
+
+% ==============================================================
+% Slide 20 - Ansible with sudo
+% ==============================================================
+\begin{frame}[fragile]{Ansible with sudo}
+\begin{term}
+ansible_user@ansible:~/secure_devops_demo$
+  ansible-playbook update.yml --ask-become-pass
+BECOME password:
+
+PLAY [Update and upgrade packages on localhost] ********
+TASK [Gathering Facts] *********************************
+ok: [localhost]
+TASK [Update apt cache] ********************************
+changed: [localhost]
+\end{term}
+\vspace{0.3cm}
+\begin{itemize}
+  \item It worked!
+  \item Typing passwords each time you run a playbook is no good.
+  \item Let's fix that.
+\end{itemize}
+\end{frame}
+
+% ==============================================================
+% Slide 21 - Storing Secrets in Ansible
+% ==============================================================
+\begin{frame}{Storing Secrets in Ansible}
+\begin{itemize}
+  \item Ansible can store secrets in a ``vault''
+  \begin{itemize}
+    \item Uses AES 256 to encrypt the data
+    \item Needs to be unlocked before using
+  \end{itemize}
+  \vspace{0.3cm}
+  \item You could store the \texttt{ansible\_user} password for sudo in the vault and run the playbook:\\
+    \textbf{\texttt{ansible-playbook update.yml --ask-vault-pass}}
+  \vspace{0.3cm}
+  \item \textbf{Not much better than just running:}\\
+    \textbf{\texttt{ansible-playbook update.yml --ask-become-pass}}
+\end{itemize}
+\end{frame}
+
+% ==============================================================
+% Slide 22 - Ansible Vault
+% ==============================================================
+\begin{frame}[fragile]{Ansible Vault}
+\begin{term}
+ansible_user@ansible:~/secure_devops_demo$ ansible-vault view vault.yml
+Vault password:
+ansible_become_password: ************
+\end{term}
+\vspace{0.3cm}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$ cat vault.yml
+$ANSIBLE_VAULT;1.1;AES256
+61366165396139306136663666343065626638343333366264393063643130
+33663663363633363634323361313435393836323133303933343631333830
+36306533313633393136343436313634333536333533333336343939363636
+38663962303633363939306133383631333836333738333330363633373631
+\end{termsmall}
+\end{frame}
+
+% ==============================================================
+% Slide 23 - Lets use pass
+% ==============================================================
+\begin{frame}[fragile]{Let's use \texttt{pass}}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$ ./install_setup_pass.sh
+Installing pass, the Unix password manager...
+[sudo] password for ansible_user:
+
+gpg: directory '/home/ansible_user/.gnupg' created
+gpg: keybox '/home/ansible_user/.gnupg/pubring.kbx' created
+Generating a new GPG key for pass...
+...
+Password store initialized for 2466552D8747919
+Pass initialized with GPG key ID: 2466552D8747919
+Enter the password for the Ansible Vault:
+
+Enter contents of ansible/vault_password and press Ctrl+D when finished:
+
+Ansible Vault password has been securely stored in pass under
+  'ansible/vault_password'.
+ansible_user@ansible:~/secure_devops_demo$ pass ansible/vault_password
+\end{termsmall}
+\end{frame}
+
+% ==============================================================
+% Slide 24 - pass uses GPG
+% ==============================================================
+\begin{frame}[fragile]{\texttt{pass} uses GPG}
+\centering{\large \texttt{pass} uses GPG to encrypt/decrypt passwords}
+\vspace{0.2cm}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{termsmall}
+ansible_user@ansible:~$ tree
+  ~/.password-store/
+/home/ansible_user/.password-store/
+  ansible
+    vault_password.gpg
+\end{termsmall}
+\vspace{0.2cm}
+\texttt{pass} just stores each entry as its own GPG encrypted file
+\vspace{0.3cm}
+
+GPG uses an agent, just like the SSH Agent
+\begin{termsmall}
+/run/user/1000/gnupg/S.gpg-agent
+
+SSH Agent PID:
+25296 ssh-agent
+25299 ssh-agent
+\end{termsmall}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{termsmall}
+ansible_user@ansible:~$ file
+  ~/.password-store/ansible/
+    vault_password.gpg
+...PGP RSA encrypted session key
+  - keyid: DEF15331 A3CB758D
+  RSA (Encrypt or Sign) 2048b
+
+ansible_user@ansible:~$ xxd
+  ~/.password-store/ansible/
+    vault_password.gpg
+00000000: 8501 0c03 def1 5331
+00000010: 8ee9 9d32 2e5a 0c68
+00000020: bf34 3e73 2e26 32b6
+...
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 25 - Update ansible.cfg for pass
+% ==============================================================
+\begin{frame}[fragile]{Update \texttt{ansible.cfg} for \texttt{pass}}
+\begin{itemize}
+  \item Update the ansible.cfg to call a script to use pass to unlock our vault
+\end{itemize}
+\vspace{0.2cm}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{term}
+[defaults]
+inventory = inventory.ini
+command_warnings = False
+deprecation_warnings = False
+interpreter_python = /usr/bin/python3
+vault_password_file =
+    bin/get_vault_pass.sh
+\end{term}
+\end{column}
+\begin{column}{0.4\textwidth}
+\begin{term}
+#!/bin/bash
+pass ansible/vault_password
+\end{term}
+\end{column}
+\end{columns}
+\vspace{0.3cm}
+\begin{itemize}
+  \item Wait, what were we doing again?
+  \item Updating the packages on the ansible server, securely using \textcolor{highlight}{NO PLAINTEXT passwords}.
+\end{itemize}
+\end{frame}
+
+% ==============================================================
+% Slide 26 - Update our update.yml
+% ==============================================================
+\begin{frame}[fragile]{Update our \texttt{update.yml}}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{term}
+---
+- name: Update and upgrade packages
+    on localhost
+  hosts: local
+  become: yes
+  vars_files:    - vault.yml  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+\end{term}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$
+  ansible-playbook update.yml
+
+PLAY [Update and upgrade packages
+  on localhost] ********************
+
+TASK [Gathering Facts] *************
+ok: [localhost]
+
+TASK [Update apt cache] ************
+changed: [localhost]
+
+TASK [Upgrade all packages] ********
+ok: [localhost]
+
+PLAY RECAP *************************
+localhost  : ok=3  changed=1
+  unreachable=0  failed=0
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 27 - Okay...
+% ==============================================================
+\begin{frame}{Okay...}
+\begin{itemize}
+  \item Couldn't I have just run:\\[0.2cm]
+    \texttt{apt update \&\& apt upgrade -y}
+  \vspace{0.5cm}
+  \item \textbf{Yes, but that's not DevOps}
+  \begin{itemize}
+    \item It doesn't scale to dozens / hundreds / thousands of machines
+    \item Error prone
+    \item You don't get ``infrastructure as code''
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+% ==============================================================
+% Slide 28 - Let's spin up more machines
+% ==============================================================
+\begin{frame}[fragile]{Let's spin up more machines}
+\begin{itemize}
+  \item We are going to need our SSH Keys for this
+  \item 3 local VMs on QEMU/KVM -- no internet needed
+\end{itemize}
+\vspace{0.2cm}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{termsmall}
+# SSH configuration for servers
+Host server1
+    HostName 192.168.122.101
+    User ansible_user
+    IdentityFile ~/.ssh/DemoSSHKey
+    AddKeysToAgent yes
+
+Host server2
+    HostName 192.168.122.102
+    User ansible_user
+    IdentityFile ~/.ssh/DemoSSHKey
+    AddKeysToAgent yes
+
+Host server3
+    HostName 192.168.122.103
+    User ansible_user
+    IdentityFile ~/.ssh/DemoSSHKey
+    AddKeysToAgent yes
+\end{termsmall}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+  \item Update 2 files:
+  \begin{itemize}
+    \item \textbf{\texttt{\textasciitilde/.ssh/config}}
+    \item \textbf{\texttt{inventory.ini}}
+  \end{itemize}
+\end{itemize}
+\vspace{0.3cm}
+\begin{termsmall}
+[local]
+localhost ansible_connection=local
+
+[servers]
+192.168.122.101
+192.168.122.102
+192.168.122.103
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 29 - Ansible to update .bashrc
+% ==============================================================
+\begin{frame}[fragile]{Ansible to update \texttt{.bashrc}}
+\begin{columns}[T]
+\begin{column}{0.58\textwidth}
+\begin{termsmall}
+---
+- hosts: localhost
+  tasks:
+    - name: Ensure ssh-agent is started
+        and environment variables are saved
+      blockinfile:
+        path: ~/.bashrc
+        marker: "# {mark} Ansible SSH
+          agent configuration"
+        block: |
+          # Ansible modified: SSH agent setup
+          if [ -z "$SSH_AUTH_SOCK" ]; then
+            eval "$(ssh-agent -s)" >
+              ~/.ssh-agent-variables
+            ssh-add ~/.ssh/DemoSSHKey
+          fi
+          if [ -f ~/.ssh-agent-variables ]
+          then
+            source ~/.ssh-agent-variables
+          fi
+        create: yes
+\end{termsmall}
+\end{column}
+\begin{column}{0.38\textwidth}
+Now the \texttt{.bashrc} file is updated to start the SSH-Agent when the user logs in
+\vspace{0.3cm}
+\begin{termsmall}
+# BEGIN Ansible SSH agent
+#   configuration
+# Ansible modified: SSH agent
+#   setup
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    eval "$(ssh-agent -s)" >
+      ~/.ssh-agent-variables
+    ssh-add ~/.ssh/DemoSSHKey
+fi
+if [ -f ~/.ssh-agent-variables ]
+then
+    source ~/.ssh-agent-variables
+fi
+# END Ansible SSH agent
+#   configuration
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 30 - Idempotent
+% ==============================================================
+\begin{frame}[fragile]{Idempotent}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$
+  ansible-playbook add_ssh_key.yml
+
+PLAY [localhost] ***********************
+TASK [Gathering Facts] *****************
+ok: [localhost]
+TASK [Ensure ssh-agent is started...] **
+changed: [localhost]
+
+PLAY RECAP *****************************
+localhost  : ok=2  changed=1
+
+ansible_user@ansible:~/secure_devops_demo$
+  ansible-playbook add_ssh_key.yml
+
+PLAY [localhost] ***********************
+TASK [Gathering Facts] *****************
+ok: [localhost]
+TASK [Ensure ssh-agent is started...] **
+ok: [localhost]
+
+PLAY RECAP *****************************
+localhost  : ok=2  changed=0
+\end{termsmall}
+\end{column}
+\begin{column}{0.42\textwidth}
+\begin{itemize}
+  \item Idempotency ensures repeatability: Running the same operation multiple times produces the same outcome without unintended side effects.
+  \vspace{0.3cm}
+  \item Prevents duplication and redundancy: Ensures that changes are only applied if necessary, making configuration management predictable and reliable.
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 31 - Now we are ready
+% ==============================================================
+\begin{frame}[fragile]{Now we are ready}
+\begin{itemize}
+  \item Oh, right. First time SSHing, getting the fingerprint message.
+  \item Also, we are trying to connect as \texttt{ansible\_user}
+\end{itemize}
+\vspace{0.2cm}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$ ansible-playbook ping-servers.yml
+
+PLAY [Ping servers] *******************************************************
+TASK [Gathering Facts] ****************************************************
+fatal: [192.168.122.101]: UNREACHABLE! => {"changed": false, "msg": "Failed
+  to connect to the host via ssh: ansible_user@192.168.122.101: Permission
+  denied (publickey).", "unreachable": true}
+The authenticity of host '192.168.122.102 (192.168.122.102)' can't be
+  established.
+ED25519 key fingerprint is SHA256:PzXwrkP3W+...
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+fatal: [192.168.122.102]: UNREACHABLE! => {"changed": false, "msg": "Failed
+  to connect to the host via ssh: Permission denied (publickey)."}
+\end{termsmall}
+\end{frame}
+
+% ==============================================================
+% Slide 32 - Add ansible_user to servers
+% ==============================================================
+\begin{frame}[fragile]{Add \texttt{ansible\_user} to servers}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{termsmall}
+---
+- name: Add ansible_user to the sudo
+    group, set up SSH key, and set
+    password
+  hosts: servers
+  become: true
+  remote_user: root  vars_files:
+    - vault.yml
+  tasks:
+    - name: Install passlib on remote
+        hosts (if required)
+      ansible.builtin.package:
+        name: python3-passlib
+        state: present
+    - name: Ensure ansible_user is in
+        the sudo group with a hashed
+        password
+      user:
+        name: ansible_user
+        groups: sudo
+        append: true
+        password: "{{ ansible_user_password
+          | password_hash('sha512') }}"
+\end{termsmall}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$
+  ansible-playbook add_ansible_user.yml
+
+PLAY [Add ansible_user to the sudo
+  group, set up SSH key, and set
+  password] ************************
+
+TASK [Gathering Facts] *************
+ok: [192.168.122.101]
+ok: [192.168.122.103]
+ok: [192.168.122.102]
+
+TASK [Install passlib...] **********
+ok: [192.168.122.101]
+ok: [192.168.122.102]
+ok: [192.168.122.103]
+
+TASK [Ensure ansible_user...] ******
+changed: [192.168.122.101]
+changed: [192.168.122.102]
+changed: [192.168.122.103]
+
+TASK [Create .ssh directory...] ****
+ok: [192.168.122.101]
+ok: [192.168.122.102]
+ok: [192.168.122.103]
+
+TASK [Add SSH public key...] *******
+ok: [192.168.122.101]
+ok: [192.168.122.102]
+ok: [192.168.122.103]
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 33 - Wait, what?
+% ==============================================================
+\begin{frame}[fragile]{Wait, what?}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$ ansible-playbook sshd_hardening-servers.yml
+
+PLAY [Configure SSHD for Ubuntu 22.04, 24.04, and 24.10] *****************
+
+TASK [Gathering Facts] ****************************************************
+fatal: [192.168.122.101]: UNREACHABLE! => {"changed": false, "msg": "Failed
+  to connect to the host via ssh: ansible_user@192.168.122.101: Permission
+  denied (publickey).", "unreachable": true}
+fatal: [192.168.122.102]: UNREACHABLE! => {"changed": false, "msg": "Failed
+  to connect to the host via ssh: ansible_user@192.168.122.102: Permission
+  denied (publickey).", "unreachable": true}
+fatal: [192.168.122.103]: UNREACHABLE! => {"changed": false, "msg": "Failed
+  to connect to the host via ssh: ansible_user@192.168.122.103: Permission
+  denied (publickey).", "unreachable": true}
+
+PLAY RECAP ****************************************************************
+192.168.122.101    : ok=0  changed=0  unreachable=1  failed=0
+192.168.122.102    : ok=0  changed=0  unreachable=1  failed=0
+192.168.122.103    : ok=0  changed=0  unreachable=1  failed=0
+\end{termsmall}
+\end{frame}
+
+% ==============================================================
+% Slide 34 - Ahhh, I need an ssh client config
+% ==============================================================
+\begin{frame}[fragile]{Ahhh, I need an ssh client config}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$ ls ~/.ssh
+DemoSSHKey  DemoSSHKey.pub  authorized_keys  known_hosts  config
+\end{termsmall}
+\vspace{0.2cm}
+\begin{termsmall}
+# BEGIN cyberforge-demo
+Host server1
+    HostName 192.168.122.101
+    User ansible_user
+    IdentityFile ~/.ssh/DemoSSHKey
+    AddKeysToAgent yes
+    StrictHostKeyChecking accept-new
+
+Host server2
+    HostName 192.168.122.102
+    User ansible_user
+    IdentityFile ~/.ssh/DemoSSHKey
+    AddKeysToAgent yes
+    StrictHostKeyChecking accept-new
+
+Host server3
+    HostName 192.168.122.103
+    User ansible_user
+    IdentityFile ~/.ssh/DemoSSHKey
+    AddKeysToAgent yes
+    StrictHostKeyChecking accept-new
+# END cyberforge-demo
+\end{termsmall}
+\end{frame}
+
+% ==============================================================
+% Slide 35 - SSHD Hardening
+% ==============================================================
+\begin{frame}[fragile]{SSHD Hardening}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{termsmall}
+---
+- name: Configure SSHD for Ubuntu
+    22.04, 24.04, and 24.10
+  hosts: servers
+  become: true
+  vars_files:    - vault.yml  tasks:
+    - name: Ensure root login is
+        disabled
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+    - name: Ensure public key
+        authentication is enabled
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+        state: present
+    - name: Disable password
+        authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        state: present
+    - name: Restart SSHD
+      service:
+        name: ssh
+        state: restarted
+\end{termsmall}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$
+  ansible-playbook
+    sshd_hardening-servers.yml
+
+PLAY [Configure SSHD for Ubuntu
+  22.04, 24.04, and 24.10] *********
+
+TASK [Gathering Facts] *************
+ok: [192.168.122.101]
+ok: [192.168.122.103]
+ok: [192.168.122.102]
+
+TASK [Ensure root login is
+  disabled] **************************
+changed: [192.168.122.101]
+changed: [192.168.122.102]
+changed: [192.168.122.103]
+
+TASK [Ensure public key auth...] ***
+changed: [192.168.122.101]
+changed: [192.168.122.102]
+changed: [192.168.122.103]
+
+TASK [Disable password auth...] ****
+changed: [192.168.122.101]
+changed: [192.168.122.102]
+changed: [192.168.122.103]
+
+TASK [Restart SSHD...] *************
+changed: [192.168.122.101]
+changed: [192.168.122.102]
+changed: [192.168.122.103]
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 36 - Now we can ping servers
+% ==============================================================
+\begin{frame}[fragile]{Now we can ping servers}
+\begin{term}
+ansible_user@ansible:~/secure_devops_demo$ ansible-playbook ping-servers.yml
+
+PLAY [Ping servers] ***************************************************
+
+TASK [Gathering Facts] ************************************************
+ok: [192.168.122.101]
+ok: [192.168.122.102]
+ok: [192.168.122.103]
+
+TASK [Ping the localhost] *********************************************
+ok: [192.168.122.101]
+ok: [192.168.122.102]
+ok: [192.168.122.103]
+
+PLAY RECAP ************************************************************
+192.168.122.101    : ok=2    changed=0    unreachable=0    failed=0
+192.168.122.102    : ok=2    changed=0    unreachable=0    failed=0
+192.168.122.103    : ok=2    changed=0    unreachable=0    failed=0
+\end{term}
+\end{frame}
+
+% ==============================================================
+% Slide 37 - Ad-hoc commands
+% ==============================================================
+\begin{frame}[fragile]{Ad-hoc commands}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\texttt{ansible servers -m shell -a "df -h"}
+\vspace{0.1cm}
+\begin{termsmall}
+192.168.122.101 | CHANGED | rc=0 >>
+Filesystem  Size Used Avail Use% Mounted
+/dev/vda1   9.6G 1.7G  7.9G  18% /
+tmpfs        46M 1008K  45M   3% /run
+...
+192.168.122.102 | CHANGED | rc=0 >>
+Filesystem  Size Used Avail Use% Mounted
+/dev/vda1   9.6G 1.7G  7.9G  18% /
+...
+192.168.122.103 | CHANGED | rc=0 >>
+Filesystem  Size Used Avail Use% Mounted
+/dev/vda1   9.6G 1.7G  7.9G  18% /
+\end{termsmall}
+\end{column}
+\begin{column}{0.48\textwidth}
+\texttt{ansible servers -a "ss -tuln"}
+\vspace{0.1cm}
+\begin{termsmall}
+192.168.122.101 | CHANGED | rc=0 >>
+Netid State Recv-Q Send-Q
+  Local Address:Port
+udp   UNCONN 0      0
+  127.0.0.53%lo:53
+tcp   LISTEN 0   4096
+  127.0.0.53%lo:53
+tcp   LISTEN 0    128
+  0.0.0.0:22
+tcp   LISTEN 0    128
+  [::]:22
+192.168.122.102 | CHANGED | rc=0 >>
+...
+192.168.122.103 | CHANGED | rc=0 >>
+...
+\end{termsmall}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================
+% Slide 38 - Summary
+% ==============================================================
+\begin{frame}{Summary}
+\begin{itemize}
+  \item DevOps is awesome!
+  \item Many demos and tutorials skip over how to set up a secure environment for Ansible
+  \begin{itemize}
+    \item SSH \& GPG Keys
+    \item SSH-Agent
+    \item GPG-Agent
+    \item \texttt{pass} -- The Unix Password Manager
+    \item Ansible Vault
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+% ==============================================================
+% Slide 39 - Questions?
+% ==============================================================
+\begin{frame}[plain]
+\vspace{3cm}
+\begin{beamercolorbox}[wd=\paperwidth,ht=2.5cm,dp=0.8cm]{frametitle}
+  \hfill{\Huge Questions?}\hspace{1cm}
+  \vspace{0.5cm}
+
+  \hfill{\small CONTACT:}\hspace{1cm}
+
+  \hfill{\large\textbf{jkirch (at) tcc dot edu}}\hspace{1cm}
+\end{beamercolorbox}
+\vfill
+\begin{center}
+{\tiny\textcopyright\ CC BY-NC-ND --- This license enables reusers to copy and distribute the material in any medium or format in unadapted form only, for noncommercial purposes only, and only so long as attribution is given to the creator.}
+\end{center}
+\end{frame}
+
+\end{document}

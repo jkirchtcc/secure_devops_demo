@@ -6,7 +6,7 @@ set -euo pipefail
 # Must be run as a user in the libvirt group, or with sudo
 
 VIRSH="sudo virsh --connect qemu:///system"
-VM_NAME="control-vm"
+VM_NAME="ansible"
 STATIC_IP="192.168.122.100"
 GATEWAY="192.168.122.1"
 IMAGE_DIR="$HOME/.cache/cyberforge-demo/images"

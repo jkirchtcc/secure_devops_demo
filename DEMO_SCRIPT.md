@@ -19,172 +19,377 @@
 
 ---
 
-## Part 1: SSH & GPG Setup (Talking Points — No Live Commands)
+## Part 1: SSH Setup Demo
 
-**Key points to cover:**
+*Control VM (192.168.122.100) only — no target VMs yet*
 
-- Why we use SSH keys instead of passwords
+We need to start by ssh to the Ansible Controller.
+ssh 
+
+### Slide 4 - Generate SSH Keys
+
+```bash
+# Show the SSH key pair
+ls ~/.ssh/DemoSSHKey*
+
+# Show the public key (ED25519 — compare size to RSA 4096)
+cat ~/.ssh/DemoSSHKey.pub
+```
+
+**Talking points:**
 - ED25519 key generation: `ssh-keygen -t ed25519 -C "DemoSSHKey" -f ~/.ssh/DemoSSHKey`
+- `-t ed25519` — key type, `-C` — comment, `-f` — filename
 - Always use a passphrase on SSH keys
-- GPG key for encrypting secrets at rest
-- `pass` — the Unix password manager backed by GPG
-- Ansible Vault password stored in `pass`, retrieved via `bin/get_vault_pass.sh`
 
-**Architecture slide talking points:**
-- Everything runs from one control VM — Ansible, OpenTofu, pass, GPG, SSH keys
-- Phase 1: local QEMU/KVM targets (no internet needed)
-- Phase 2: same playbooks target cloud servers provisioned by OpenTofu
-- The playbooks don't care where the servers are — just IPs in an inventory file
+### Slide 5 - Upload SSH Public Key
+
+**Talking points (no live commands):**
+- Upload the public key to your cloud provider (DigitalOcean console shown)
+- The public key is safe to share — that's the whole point
+
+### Slide 6 - RSA 4096 vs ED25519
+
+**Talking points (no live commands):**
+- RSA 4096 key is huge, ED25519 is one line
+- Smaller, faster, more secure
+
+### Slide 7 - Configure SSH Client
+
+```bash
+# Show the SSH config (no server entries yet — just the control VM)
+cat ~/.ssh/config
+```
+
+**Talking points:**
+- Host alias, HostName (IP), User, IdentityFile
+- This is how you avoid typing `ssh -i ~/.ssh/DemoSSHKey ansible_user@192.168.122.101` every time
+
+### Slide 8 - SSH to ansible, part 1
+
+**Talking points (no live commands):**
+- First SSH connection prompts for passphrase
+- `AddKeysToAgent yes` — enter passphrase once, ssh-agent remembers
+- ssh-agent caches the decrypted key in memory
+
+### Slide 9 - CyberSecurity Time
+
+**Talking points (no live commands — covered live in Part 5):**
+- Preview of sshd_config hardening: `PermitRootLogin no`, `PubkeyAuthentication yes`, `PasswordAuthentication no`
+- We'll do this with Ansible later
+
+### Slide 10 - Update ssh config
+
+**Talking points (no live commands):**
+- Change `User root` to `User ansible_user` after creating the user
+- Our script handles this automatically
+
+### Slide 11 - SSH Setup Summary
+
+**Talking points (no live commands):**
+- Created SSH keys, configured client, connected with keys, hardened SSH
+- Question: Are we doing DevOps?
 
 ---
 
-## Part 2: Local Demo — Ansible Against QEMU/KVM Targets
+## Part 2: Ansible Setup Demo
 
-### Show the local target VMs
+*Control VM (192.168.122.100) only — no target VMs yet*
+
+### Slide 13 - Install Ansible
 
 ```bash
-# Show the 3 local VMs running
-virsh list --all
+# Show Ansible is installed
+ansible --version
+```
 
-# Show their IPs
-bin/update_local_inventory.sh
+**Talking points:**
+- Installed via `uv tool install ansible-core` with `passlib` injected
+- `uv` is a fast Python package manager
 
-# Show the inventory
+### Slide 15 - Ansible Installed
+
+**Talking points (no live commands):**
+- Verify the version, Python version, config file location
+
+---
+
+## Part 3: Ansible Demo
+
+*Control VM (192.168.122.100) only — no target VMs yet*
+
+### Slide 17 - Our First Ansible Playbook
+
+```bash
+# Show the Ansible config
+cat ansible.cfg
+
+# Show the inventory (just [local] — no servers yet)
 cat inventory.ini
+
+# Show the ping playbook
+cat ping.yml
+
+# Our first playbook — ping localhost
+ansible-playbook ping.yml
 ```
 
-**Talking point:** "We have 3 local VMs — Ubuntu 24.04, 22.04, and 24.10 — running on QEMU/KVM. No internet needed, no cloud costs. Perfect for development and testing."
+**Talking points:**
+- `ansible.cfg` — inventory path, warnings off, vault_password_file
+- `ping.yml` targets `hosts: local` — localhost only
+- Ansible `ping` is not ICMP — it verifies Ansible can connect and run Python
 
-### Verify connectivity
+### Slide 18 - ansible.cfg
 
-```bash
-# First connection as root
-ansible servers -m ping -u root
-```
+**Talking points (no live commands):**
+- inventory path, warnings off, interpreter_python
+- No need to pass `-i inventory.ini` every time
 
-### Add the SSH key to the agent
-
-```bash
-ansible-playbook add_ssh_key.yml
-```
-
-### Run the update playbook
+### Slide 19 - Update ansible with Ansible
 
 ```bash
+# Show the update playbook — uses become (sudo) and vars_files (vault)
+cat update.yml
+
+# Run it — updates packages on localhost
 ansible-playbook update.yml
 ```
 
-### Add ansible_user to all servers
-
-```bash
-ansible-playbook add_ansible_user.yml
-```
-
-**Talking point:** "This playbook connects as root, creates `ansible_user` with a hashed password from Ansible Vault, and deploys our SSH public key. After this, we never need root again."
-
-### Harden SSH on all servers
-
-```bash
-ansible-playbook sshd_hardening-servers.yml
-```
-
-**Talking point:** "We just disabled root login and password authentication across 3 servers in one command. Try doing that manually without mistakes."
-
-### Verify everything works
-
-```bash
-# Ping all servers as ansible_user
-ansible-playbook ping-servers.yml
-
-# Ad-hoc commands
-ansible servers -m setup -a "filter=ansible_distribution*"
-ansible servers -m shell -a "df -h"
-ansible servers -a "ss -tuln"
-```
-
-**Talking point on `ansible_distribution`:** "Three different Ubuntu versions, all configured identically with a single set of playbooks."
+**Talking points:**
+- `become: yes` uses sudo
+- `vars_files: vault.yml` for the become password
+- No plaintext passwords anywhere
 
 ---
 
-## Part 3: Cloud Demo — OpenTofu + Ansible Against DO Droplets
+## Part 4: Storing Secrets
 
-**Talking point:** "Now let's do the same thing, but in the cloud. Same playbooks, different targets."
+*Control VM (192.168.122.100) only — no target VMs yet*
 
-### Show the OpenTofu code
+### Slide 21 - Storing Secrets in Ansible
+
+**Talking points (no live commands):**
+- Ansible can store secrets in a vault — AES-256 encrypted
+- You could use `--ask-vault-pass` but that's not much better than `--ask-become-pass`
+
+### Slide 22 - Ansible Vault
 
 ```bash
-cat tofu/main.tf
-cat tofu/variables.tf
-cat tofu/outputs.tf
+# Show the encrypted vault file — AES-256 encrypted blob
+cat vault.yml
+
+# Show the decrypted vault contents (uses pass automatically via ansible.cfg)
+ansible-vault view vault.yml
 ```
 
-**Talking point:** "We're provisioning 3 Ubuntu droplets — 24.04, 22.04, and 24.10 — to show Ansible working across different OS versions. The exact same versions as our local VMs."
+**Talking points:**
+- `cat vault.yml` — gibberish, AES-256 encrypted
+- `ansible-vault view` decrypts it — shows `ansible_become_password` and `ansible_user_password`
 
-**Talking point:** "Notice `sensitive = true` on the token variable — OpenTofu won't show this in plan or apply output."
-
-### Provision the infrastructure
+### Slide 23 - Lets use pass
 
 ```bash
-export TF_VAR_do_token=$(pass digitalocean/api_token)
+# Show the script that retrieves the vault password from pass
+cat bin/get_vault_pass.sh
 
-cd tofu
-tofu init
-tofu plan
+# Show pass retrieves the vault password via GPG
+pass ansible/vault_password
 ```
 
-**Talking point during plan:** "The plan shows exactly what will be created before we commit. Infrastructure as code means we can review, version, and audit every change."
+**Talking points:**
+- `pass` is the Unix password manager — each secret is a GPG-encrypted file
+- `get_vault_pass.sh` just calls `pass ansible/vault_password`
+
+### Slide 24 - pass uses GPG
+
+**Talking points (no live commands):**
+- `pass` stores each entry as its own GPG-encrypted file
+- GPG agent caches the decryption key, just like ssh-agent caches SSH keys
+- Two agents running: ssh-agent for SSH keys, gpg-agent for GPG keys
+
+### Slide 25 - Update ansible.cfg for pass
 
 ```bash
-tofu apply
+# Show ansible.cfg has vault_password_file pointing to get_vault_pass.sh
+cat ansible.cfg
 ```
 
-**While waiting (~60-90s):** Talk about IaC benefits:
-- Reproducible environments
-- Version-controlled infrastructure
-- Peer review via pull requests
-- Easy teardown — no orphaned resources
+**Talking points:**
+- `vault_password_file = bin/get_vault_pass.sh`
+- Chain: `ansible.cfg` -> `get_vault_pass.sh` -> `pass` -> GPG -> vault password -> decrypt `vault.yml`
+- No plaintext passwords on disk, ever
 
-### Update inventory with cloud IPs
+### Slide 27 - Okay...
+
+**Talking points (no live commands):**
+- "Couldn't I have just run `apt update && apt upgrade -y`?"
+- Yes, but that's not DevOps — doesn't scale, error prone, no infrastructure as code
+
+---
+
+## Part 5: SSHD Hardening
+
+*Now we add the 3 target VMs (192.168.122.101-103)*
+
+### Slide 28 - Let's spin up more machines
 
 ```bash
-cd ..
-bin/update_inventory.sh
+# Show the inventory (before — just [local], no servers)
 cat inventory.ini
+
+# Show the SSH config (before — no server entries)
+cat ~/.ssh/config
+
+# Update inventory and SSH config with local VM IPs
+bin/update_local_inventory.sh
+
+# Show the inventory (after — now has [servers] with 3 IPs)
+cat inventory.ini
+
+# Show the SSH config (after — now has server1/server2/server3 entries)
+cat ~/.ssh/config
 ```
 
-**Talking point:** "This script reads the IPs from OpenTofu output and writes them into our Ansible inventory and SSH config. Same inventory format as the local VMs."
+**Talking points:**
+- 3 local VMs: Ubuntu 24.04, 22.04, and 24.10 on QEMU/KVM — no internet needed
+- `bin/update_local_inventory.sh` writes both `inventory.ini` and `~/.ssh/config`
+- Before/after shows exactly what changed
 
-### Run the same playbooks against cloud targets
+### Slide 29 - Ansible to update .bashrc
 
 ```bash
-ansible-playbook add_ansible_user.yml
-ansible-playbook sshd_hardening-servers.yml
-ansible-playbook ping-servers.yml
-ansible servers -m setup -a "filter=ansible_distribution*"
+# Configure ssh-agent auto-start
+ansible-playbook add_ssh_key.yml
 ```
 
-**Talking point:** "The exact same playbooks that just configured our local VMs are now configuring 3 cloud servers. The only thing that changed was the inventory."
+**Talking points:**
+- `blockinfile` module adds ssh-agent startup to `.bashrc`
+- Now ssh-agent starts automatically on login
+
+### Slide 30 - Idempotent
+
+```bash
+# Run it again — notice "ok" instead of "changed"
+ansible-playbook add_ssh_key.yml
+```
+
+**Talking points:**
+- Idempotency: running the same operation twice produces the same result
+- First run: `changed=1`, second run: `changed=0`
+- Prevents duplication, makes configuration management predictable
+
+### Slide 31 - Now we are ready
+
+```bash
+# First connection as root — verify connectivity
+ansible servers -m ping -u root
+```
+
+**Talking points:**
+- First time SSH-ing to these servers, accepting fingerprints
+- We connect as root initially because ansible_user doesn't exist yet
+
+### Slide 32 - Add ansible_user to servers
+
+```bash
+# Show the add_ansible_user playbook
+cat add_ansible_user.yml
+
+# Run it — creates ansible_user, deploys SSH key, sets password from vault
+ansible-playbook add_ansible_user.yml
+```
+
+**Talking points:**
+- `remote_user: root` — connects as root to create the user
+- Creates `ansible_user` in sudo group with hashed password from vault
+- Deploys SSH public key to `authorized_keys`
+- After this, we never need root again
+
+### Slide 34 - Ahhh, I need an ssh client config
+
+```bash
+# Show the SSH config has server entries with User ansible_user
+cat ~/.ssh/config
+```
+
+**Talking points:**
+- The SSH config we wrote earlier has `User ansible_user` and `IdentityFile`
+- This is why `bin/update_local_inventory.sh` writes both files
+
+### Slide 35 - SSHD Hardening
+
+```bash
+# Show current sshd_config on the servers (before)
+ansible servers -a "grep -E 'PermitRootLogin|PasswordAuthentication|PubkeyAuthentication' /etc/ssh/sshd_config"
+
+# Show the hardening playbook
+cat sshd_hardening-servers.yml
+
+# Run it — disables root login, disables password auth, enables pubkey auth
+ansible-playbook sshd_hardening-servers.yml
+
+# Show sshd_config on the servers (after — values changed)
+ansible servers -a "grep -E 'PermitRootLogin|PasswordAuthentication|PubkeyAuthentication' /etc/ssh/sshd_config"
+```
+
+**Talking points:**
+- Three changes across 3 servers in one command: `PermitRootLogin no`, `PubkeyAuthentication yes`, `PasswordAuthentication no`
+- Try doing that manually without mistakes
+- Before/after grep shows exactly what changed
+
+### Slide 36 - Now we can ping servers
+
+```bash
+# Verify everything still works after hardening
+ansible-playbook ping-servers.yml
+```
+
+**Talking points:**
+- We can still connect because we set up SSH keys and ansible_user first
+- Root login disabled, password auth disabled — only SSH keys work now
+
+---
+
+## Part 6: Ad-hoc Commands
+
+### Slide 39 - Ad-hoc commands
+
+```bash
+# Show OS distribution — 3 different Ubuntu versions, configured identically
+ansible servers -m setup -a "filter=ansible_distribution*"
+
+# Disk usage across all servers
+ansible servers -m shell -a "df -h"
+
+# Listening ports — only SSH should be open
+ansible servers -a "ss -tuln"
+```
+
+**Talking points:**
+- Ad-hoc commands: run any command across all servers instantly
+- `ansible_distribution` shows three different Ubuntu versions, all configured identically with a single set of playbooks
+- `ss -tuln` — only SSH (port 22) is listening, minimal attack surface
+
+### Slide 40 - Summary
+
+**Talking points (no live commands):**
+- DevOps is awesome
+- SSH & GPG keys, SSH-Agent, GPG-Agent, pass, Ansible Vault
+- Many demos skip the secure setup — that's what makes this talk different
 
 ---
 
 ## Post-Demo Teardown
 
 ```bash
-# Destroy cloud infrastructure
-bin/teardown.sh
-
 # Destroy local VMs (on host)
 bin/destroy_target_vms.sh
 ```
-
-**Talking point:** "One command tears down everything — destroys the droplets, cleans SSH known hosts, resets the inventory. No orphaned resources, no lingering SSH keys in known_hosts."
 
 ---
 
 ## Fallback Plan
 
 If WiFi fails during the live demo:
-1. Skip Part 3 (cloud demo)
-2. Phase 1 (local VMs) is already a complete demo
-3. Show the OpenTofu code and explain what it would do
-4. "The same playbooks you just saw work against local VMs would configure cloud servers — the only difference is the inventory file"
+1. The local demo (Parts 1-6) is a complete presentation
+2. Show the OpenTofu code and explain what it would do
+3. "The same playbooks you just saw work against local VMs would configure cloud servers — the only difference is the inventory file"
