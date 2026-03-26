@@ -67,6 +67,13 @@ pause() {
 }
 
 RECORD_PROMPT='ansible:~/secure_devops_demo$ '
+RECORD_CMD_PAUSE=1.5   # seconds to pause after each command output
+RECORD_END_PAUSE=3     # seconds to hold at end of slide before GIF loops
+
+hold() {
+    # Pause at end of a slide recording so output is readable before loop
+    [ "$RECORD_MODE" -eq 1 ] && sleep "$RECORD_END_PAUSE"
+}
 
 run() {
     local display=()
@@ -81,7 +88,9 @@ run() {
         echo -ne "${BOLD}${RECORD_PROMPT}${RESET}"
         printf '%s' "${display[*]}" | pv -qL 8
         echo
-        sleep 0.3
+        "$@"
+        sleep "$RECORD_CMD_PAUSE"
+        return
     else
         echo -e "${BOLD}\$ ${display[*]}${RESET}"
     fi
@@ -147,12 +156,14 @@ if in_slide; then
     pause
     run cat ~/.ssh/DemoSSHKey.pub
     pause
+    hold
 fi
 
 slide 7 "Configure SSH Client"
 if in_slide; then
     run cat ~/.ssh/config
     pause
+    hold
 fi
 
 fi
@@ -167,6 +178,7 @@ slide 13 "Ansible Installed"
 if in_slide; then
     run ansible --version
     pause
+    hold
 fi
 
 fi
@@ -187,6 +199,7 @@ if in_slide; then
     pause
     run ansible-playbook ping.yml
     pause
+    hold
 fi
 
 slide 19 "Update ansible with Ansible"
@@ -195,6 +208,7 @@ if in_slide; then
     pause
     run ansible-playbook update.yml
     pause
+    hold
 fi
 
 fi
@@ -211,6 +225,7 @@ if in_slide; then
     pause
     run ansible-vault view vault.yml
     pause
+    hold
 fi
 
 slide 23 "Let's use pass"
@@ -219,12 +234,14 @@ if in_slide; then
     pause
     run pass ansible/vault_password
     pause
+    hold
 fi
 
 slide 25 "ansible.cfg with vault_password_file"
 if in_slide; then
     run cat ansible.cfg
     pause
+    hold
 fi
 
 fi
@@ -248,24 +265,28 @@ slide 28 "Let's spin up more machines"
 if in_slide; then
     before_after "inventory.ini" inventory.ini "bin/update_local_inventory.sh"
     pause
+    hold
 fi
 
 slide 29 "Ansible to update .bashrc"
 if in_slide; then
     run ansible-playbook add_ssh_key.yml
     pause
+    hold
 fi
 
 slide 30 "Idempotent — run it again"
 if in_slide; then
     run ansible-playbook add_ssh_key.yml
     pause
+    hold
 fi
 
 slide 31 "First connection to servers as root"
 if in_slide; then
     run ansible servers -m ping -u root
     pause
+    hold
 fi
 
 slide 32 "Add ansible_user to servers"
@@ -274,6 +295,7 @@ if in_slide; then
     pause
     run ansible-playbook add_ansible_user.yml
     pause
+    hold
 fi
 
 slide 33 "Switch SSH config to ansible_user"
@@ -281,12 +303,14 @@ if in_slide; then
     bin/update_ssh_config.sh > /dev/null
     run cat ~/.ssh/config
     pause
+    hold
 fi
 
 slide 34 "Verify ansible_user can connect"
 if in_slide; then
     run ansible-playbook ping-servers.yml
     pause
+    hold
 fi
 
 slide 35 "SSHD Hardening"
@@ -301,12 +325,14 @@ if in_slide; then
     echo -e "${BOLD}── AFTER: sshd_config on all servers ──${RESET}"
     run ansible servers -a "grep -E 'PermitRootLogin|PasswordAuthentication|PubkeyAuthentication' /etc/ssh/sshd_config"
     pause
+    hold
 fi
 
 slide 36 "Verify we can still connect"
 if in_slide; then
     run ansible-playbook ping-servers.yml
     pause
+    hold
 fi
 
 fi
@@ -325,6 +351,7 @@ if in_slide; then
     pause
     run ansible servers -a "ss -tuln"
     pause
+    hold
 fi
 
 fi
