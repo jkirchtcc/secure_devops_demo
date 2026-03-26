@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure DevOps: Setting up a secure environment for Ansible — CyberForge 2026</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Helvetica, Arial, sans-serif; background: #f4f4f4; color: #222; }
+  header {
+    background: #3c5078;
+    color: white;
+    padding: 2rem;
+    text-align: center;
+  }
+  header h1 { font-size: 1.6rem; font-weight: bold; }
+  header p { margin-top: 0.5rem; font-size: 1rem; opacity: 0.85; }
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
+  .part-heading {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #3c5078;
+    border-bottom: 2px solid #3c5078;
+    margin: 2.5rem 0 1.5rem;
+    padding-bottom: 0.4rem;
+  }
+  .slide-block {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    background: white;
+    border-radius: 6px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    align-items: flex-start;
+  }
+  .slide-block .slide-img {
+    flex: 0 0 48%;
+    max-width: 48%;
+  }
+  .slide-block .slide-img img {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  .slide-block .slide-gif {
+    flex: 0 0 48%;
+    max-width: 48%;
+  }
+  .slide-block .slide-gif img {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #1a1a1a;
+  }
+  .slide-block .slide-gif .no-recording {
+    width: 100%;
+    background: #eee;
+    color: #999;
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 2rem 1rem;
+    border-radius: 4px;
+    border: 1px dashed #ccc;
+  }
+  .slide-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.4rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .slide-title {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+    color: #222;
+  }
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.85rem;
+    color: #888;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Secure DevOps: Setting up a secure environment for Ansible</h1>
+  <p>CyberForge 2026 &mdash; Joel Kirch</p>
+</header>
+
+<main>
+
+<div class="part-heading">Part 1: SSH Setup</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 4</div>
+    <div class="slide-title">Generate SSH Keys</div>
+    <img src="slide-04.png" alt="Slide 4">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <img src="slide-4.gif" alt="Demo: Generate SSH Keys">
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 7</div>
+    <div class="slide-title">Configure SSH Client</div>
+    <img src="slide-07.png" alt="Slide 7">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <img src="slide-7.gif" alt="Demo: Configure SSH Client">
+  </div>
+</div>
+
+<div class="part-heading">Part 2: Ansible Setup</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 13</div>
+    <div class="slide-title">Ansible Installed</div>
+    <img src="slide-13.png" alt="Slide 13">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <img src="slide-13.gif" alt="Demo: Ansible Installed">
+  </div>
+</div>
+
+<div class="part-heading">Part 3: Ansible Demo</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 17</div>
+    <div class="slide-title">Our First Ansible Playbook</div>
+    <img src="slide-17.png" alt="Slide 17">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <img src="slide-17.gif" alt="Demo: Our First Ansible Playbook">
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 19</div>
+    <div class="slide-title">Update ansible with Ansible</div>
+    <img src="slide-19.png" alt="Slide 19">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <img src="slide-19.gif" alt="Demo: Update ansible with Ansible">
+  </div>
+</div>
+
+<div class="part-heading">Part 4: Storing Secrets</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 22</div>
+    <div class="slide-title">Ansible Vault</div>
+    <img src="slide-22.png" alt="Slide 22">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <img src="slide-22.gif" alt="Demo: Ansible Vault">
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 23</div>
+    <div class="slide-title">Let's use pass</div>
+    <img src="slide-23.png" alt="Slide 23">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <img src="slide-23.gif" alt="Demo: Let's use pass">
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 25</div>
+    <div class="slide-title">ansible.cfg with vault_password_file</div>
+    <img src="slide-25.png" alt="Slide 25">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <img src="slide-25.gif" alt="Demo: ansible.cfg with vault_password_file">
+  </div>
+</div>
+
+<div class="part-heading">Part 5: SSHD Hardening</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 28</div>
+    <div class="slide-title">Let's spin up more machines</div>
+    <img src="slide-28.png" alt="Slide 28">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <div class="no-recording">Recording pending (requires target VMs)</div>
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 29</div>
+    <div class="slide-title">Ansible to update .bashrc</div>
+    <img src="slide-29.png" alt="Slide 29">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <div class="no-recording">Recording pending (requires target VMs)</div>
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 30</div>
+    <div class="slide-title">Idempotent — run it again</div>
+    <img src="slide-30.png" alt="Slide 30">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <div class="no-recording">Recording pending (requires target VMs)</div>
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 31</div>
+    <div class="slide-title">First connection to servers as root</div>
+    <img src="slide-31.png" alt="Slide 31">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <div class="no-recording">Recording pending (requires target VMs)</div>
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 32</div>
+    <div class="slide-title">Add ansible_user to servers</div>
+    <img src="slide-32.png" alt="Slide 32">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <div class="no-recording">Recording pending (requires target VMs)</div>
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 33</div>
+    <div class="slide-title">Switch SSH config to ansible_user</div>
+    <img src="slide-33.png" alt="Slide 33">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <div class="no-recording">Recording pending (requires target VMs)</div>
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 34</div>
+    <div class="slide-title">Verify ansible_user can connect</div>
+    <img src="slide-34.png" alt="Slide 34">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <div class="no-recording">Recording pending (requires target VMs)</div>
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 35</div>
+    <div class="slide-title">SSHD Hardening</div>
+    <img src="slide-35.png" alt="Slide 35">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <div class="no-recording">Recording pending (requires target VMs)</div>
+  </div>
+</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 36</div>
+    <div class="slide-title">Verify we can still connect</div>
+    <img src="slide-36.png" alt="Slide 36">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <div class="no-recording">Recording pending (requires target VMs)</div>
+  </div>
+</div>
+
+<div class="part-heading">Part 6: Ad-hoc Commands</div>
+
+<div class="slide-block">
+  <div class="slide-img">
+    <div class="slide-label">Slide 37</div>
+    <div class="slide-title">Ad-hoc commands</div>
+    <img src="slide-37.png" alt="Slide 37">
+  </div>
+  <div class="slide-gif">
+    <div class="slide-label">Demo</div>
+    <div class="no-recording">Recording pending (requires target VMs)</div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  CyberForge 2026 &mdash; Secure DevOps: Setting up a secure environment for Ansible
+</footer>
+
+</body>
+</html>

@@ -18,4 +18,5 @@ inventory-local.ini
 *.toc
 *.vrb
 *.listing
-docs/recordings/
+docs/recordings/*.gif
+docs/recordings/*.png
