@@ -26,17 +26,8 @@
     flex-shrink: 0;
   }
   #topbar h1 { font-size: 1rem; font-weight: bold; }
-  #part-label {
-    font-size: 0.85rem;
-    opacity: 0.75;
-    white-space: nowrap;
-    margin-left: 1rem;
-  }
-  #counter {
-    font-size: 0.9rem;
-    opacity: 0.85;
-    white-space: nowrap;
-  }
+  #part-label { font-size: 0.85rem; opacity: 0.75; white-space: nowrap; margin-left: 1rem; }
+  #counter { font-size: 0.9rem; opacity: 0.85; white-space: nowrap; }
 
   #content {
     flex: 1;
@@ -55,37 +46,69 @@
     align-self: flex-start;
     max-width: 900px;
     width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
   }
 
+  /* ── Slide image + annotation overlay ── */
   #slide-img-wrap {
     max-width: 900px;
     width: 100%;
+    position: relative;
   }
-  #slide-img-wrap img {
+  #slide-img {
     width: 100%;
     border: 1px solid #444;
     border-radius: 4px;
     display: block;
   }
+  #annotation-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: 4px;
+    display: none;
+  }
+  #annotation-canvas.laser  { cursor: none; }
+  #annotation-canvas.draw   { cursor: crosshair; }
+  #annotation-canvas.box    { cursor: crosshair; }
 
-  #demo-wrap {
+  /* ── Annotation toolbar ── */
+  #annotation-toolbar {
+    display: none;
+    align-self: flex-start;
     max-width: 900px;
     width: 100%;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
   }
-  #demo-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #888;
-    margin-bottom: 0.4rem;
-  }
-  #demo-wrap img {
-    width: 100%;
-    border: 1px solid #444;
+  #annotation-toolbar.active { display: flex; }
+  .ann-btn {
+    background: #2a2a4a;
+    border: 1px solid #555;
+    color: #ccc;
     border-radius: 4px;
-    background: #111;
-    display: block;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+    cursor: pointer;
   }
+  .ann-btn:hover { background: #3a3a6a; }
+  .ann-btn.active { background: #3c5078; border-color: #7aa0d4; color: white; }
+  .ann-color {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    flex-shrink: 0;
+  }
+  .ann-color.active { border-color: white; }
+
+  /* ── Demo section ── */
+  #demo-wrap { max-width: 900px; width: 100%; }
+  #demo-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 0.4rem; }
+
   #demo-play {
     position: relative;
     cursor: pointer;
@@ -114,6 +137,41 @@
     border-color: transparent transparent transparent rgba(255,255,255,0.9);
     margin-left: 5px;
   }
+
+  #demo-gif-wrap { position: relative; }
+  #demo-gif {
+    width: 100%;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #111;
+    display: block;
+  }
+  #demo-pause-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: 4px;
+    display: none;
+  }
+
+  #demo-controls {
+    display: none;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+    align-items: center;
+  }
+  #demo-controls.visible { display: flex; }
+  .ctrl-btn {
+    background: #2a2a4a;
+    border: 1px solid #555;
+    color: #ccc;
+    border-radius: 4px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .ctrl-btn:hover { background: #3a3a6a; }
+
   #demo-pending {
     background: #222;
     border: 1px dashed #444;
@@ -124,6 +182,7 @@
     padding: 1.5rem;
   }
 
+  /* ── Nav bar ── */
   #navbar {
     flex-shrink: 0;
     background: #252540;
@@ -146,20 +205,8 @@
   button:hover { background: #4d6490; }
   button:disabled { background: #333; color: #555; cursor: default; }
 
-  #slide-dots {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 400px;
-  }
-  .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #444;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
+  #slide-dots { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; max-width: 400px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #444; cursor: pointer; flex-shrink: 0; }
   .dot.active { background: #7aa0d4; }
   .dot.has-gif { background: #5a8a5a; }
   .dot.has-gif.active { background: #8fd48f; }
@@ -176,14 +223,41 @@
 </div>
 
 <div id="content">
-  <div id="slide-title"></div>
-  <div id="slide-img-wrap"><img id="slide-img" src="" alt=""></div>
+  <div id="slide-title">
+    <span id="slide-title-text"></span>
+    <button id="annotate-btn" onclick="toggleAnnotation()" title="Annotate (A)" style="font-size:0.75rem;padding:0.25rem 0.6rem;background:#2a2a4a;border:1px solid #555;color:#ccc">&#9998; Annotate</button>
+  </div>
+
+  <div id="annotation-toolbar">
+    <button class="ann-btn active" id="mode-laser" onclick="setMode('laser')">&#128308; Laser</button>
+    <button class="ann-btn" id="mode-draw"  onclick="setMode('draw')">&#9998; Draw</button>
+    <button class="ann-btn" id="mode-box"   onclick="setMode('box')">&#9634; Box</button>
+    <span style="margin-left:0.25rem;font-size:0.75rem;color:#666">Color:</span>
+    <div class="ann-color active" id="color-red"    style="background:#ff3333" onclick="setColor('#ff3333')" title="Red"></div>
+    <div class="ann-color"        id="color-yellow" style="background:#ffdd00" onclick="setColor('#ffdd00')" title="Yellow"></div>
+    <div class="ann-color"        id="color-cyan"   style="background:#00ccff" onclick="setColor('#00ccff')" title="Cyan"></div>
+    <button class="ann-btn" onclick="clearAnnotations()" style="margin-left:0.5rem">&#10005; Clear</button>
+    <button class="ann-btn" onclick="toggleAnnotation()" style="margin-left:auto">Done</button>
+  </div>
+
+  <div id="slide-img-wrap">
+    <img id="slide-img" src="" alt="">
+    <canvas id="annotation-canvas"></canvas>
+  </div>
+
   <div id="demo-wrap" style="display:none">
     <div id="demo-label">Demo</div>
     <div id="demo-play" onclick="startDemo()" style="display:none">
       <div class="play-icon"></div>
     </div>
-    <img id="demo-gif" src="" alt="" style="display:none">
+    <div id="demo-gif-wrap" style="display:none">
+      <img id="demo-gif" src="" alt="">
+      <canvas id="demo-pause-canvas"></canvas>
+    </div>
+    <div id="demo-controls">
+      <button class="ctrl-btn" id="btn-playpause" onclick="togglePlayPause()">&#9646;&#9646; Pause</button>
+      <button class="ctrl-btn" onclick="replayDemo()">&#8635; Replay</button>
+    </div>
     <div id="demo-pending" style="display:none">Recording pending</div>
   </div>
 </div>
@@ -237,42 +311,259 @@ const slides = [
   { n: 39, img: "slide-39.png", title: "", gif: null, part: null },
 ];
 
-// Track current part label across slides
+// ── Part labels ──────────────────────────────────────────────────────────────
 let partLabels = {};
-let currentPart = "";
-slides.forEach(s => { if (s.part) currentPart = s.part; partLabels[s.n] = currentPart; });
+let cp = "";
+slides.forEach(s => { if (s.part) cp = s.part; partLabels[s.n] = cp; });
 
+// ── State ────────────────────────────────────────────────────────────────────
 let current = 0;
-let pendingGif = null;  // gif filename waiting to be loaded on click
+let pendingGif = null;
+let gifPlaying = false;
 
+// ── GIF controls ─────────────────────────────────────────────────────────────
 function startDemo() {
-  if (!pendingGif) return;
-  const gif = document.getElementById('demo-gif');
-  const play = document.getElementById('demo-play');
+  const gif     = document.getElementById('demo-gif');
+  const gifWrap = document.getElementById('demo-gif-wrap');
+  const play    = document.getElementById('demo-play');
+  const controls = document.getElementById('demo-controls');
+  pendingGif = slides[current].gif;
   gif.src = pendingGif;
-  gif.style.display = 'block';
+  gifWrap.style.display = 'block';
   play.style.display = 'none';
+  controls.classList.add('visible');
+  document.getElementById('btn-playpause').textContent = '⏸ Pause';
+  gifPlaying = true;
 }
 
+function togglePlayPause() {
+  if (gifPlaying) {
+    pauseGif();
+  } else {
+    resumeGif();
+  }
+}
+
+function pauseGif() {
+  const gif    = document.getElementById('demo-gif');
+  const canvas = document.getElementById('demo-pause-canvas');
+  canvas.width  = gif.naturalWidth  || gif.offsetWidth;
+  canvas.height = gif.naturalHeight || gif.offsetHeight;
+  canvas.getContext('2d').drawImage(gif, 0, 0, canvas.width, canvas.height);
+  gif.style.display = 'none';
+  canvas.style.display = 'block';
+  document.getElementById('btn-playpause').textContent = '▶ Play';
+  gifPlaying = false;
+}
+
+function resumeGif() {
+  const gif    = document.getElementById('demo-gif');
+  const canvas = document.getElementById('demo-pause-canvas');
+  const src = gif.src || pendingGif;
+  gif.src = '';
+  gif.src = src;
+  gif.style.display = 'block';
+  canvas.style.display = 'none';
+  document.getElementById('btn-playpause').textContent = '⏸ Pause';
+  gifPlaying = true;
+}
+
+function replayDemo() {
+  const gif    = document.getElementById('demo-gif');
+  const canvas = document.getElementById('demo-pause-canvas');
+  gif.src = '';
+  gif.src = pendingGif;
+  gif.style.display = 'block';
+  canvas.style.display = 'none';
+  document.getElementById('btn-playpause').textContent = '⏸ Pause';
+  gifPlaying = true;
+}
+
+function resetDemo() {
+  const gif     = document.getElementById('demo-gif');
+  const canvas  = document.getElementById('demo-pause-canvas');
+  const gifWrap = document.getElementById('demo-gif-wrap');
+  const play    = document.getElementById('demo-play');
+  const controls = document.getElementById('demo-controls');
+  gif.src = '';
+  gif.style.display = 'none';
+  canvas.style.display = 'none';
+  gifWrap.style.display = 'none';
+  play.style.display = 'none';
+  controls.classList.remove('visible');
+  pendingGif = null;
+  gifPlaying = false;
+}
+
+// ── Annotation ───────────────────────────────────────────────────────────────
+let annotating = false;
+let annMode    = 'laser';
+let annColor   = '#ff3333';
+let annDrawing = false;
+let annStart   = null;
+let annPaths   = [];        // stored shapes for draw/box modes
+let laserPos   = null;
+let laserRaf   = null;
+
+const annCanvas = document.getElementById('annotation-canvas');
+const annCtx    = annCanvas.getContext('2d');
+
+function toggleAnnotation() {
+  annotating = !annotating;
+  const toolbar = document.getElementById('annotation-toolbar');
+  const btn     = document.getElementById('annotate-btn');
+  if (annotating) {
+    toolbar.classList.add('active');
+    btn.style.background = '#3c5078';
+    btn.style.borderColor = '#7aa0d4';
+    btn.style.color = 'white';
+    syncCanvas();
+    annCanvas.style.display = 'block';
+    setMode(annMode);
+    if (annMode === 'laser') startLaserLoop();
+  } else {
+    toolbar.classList.remove('active');
+    btn.style.background = '#2a2a4a';
+    btn.style.borderColor = '#555';
+    btn.style.color = '#ccc';
+    annCanvas.style.display = 'none';
+    stopLaserLoop();
+  }
+}
+
+function syncCanvas() {
+  const img = document.getElementById('slide-img');
+  annCanvas.width  = img.naturalWidth  || img.offsetWidth;
+  annCanvas.height = img.naturalHeight || img.offsetHeight;
+  redrawPaths();
+}
+
+function setMode(mode) {
+  annMode = mode;
+  ['laser','draw','box'].forEach(m => {
+    document.getElementById('mode-' + m).classList.toggle('active', m === mode);
+  });
+  annCanvas.className = mode;
+  if (mode === 'laser') {
+    startLaserLoop();
+  } else {
+    stopLaserLoop();
+    redrawPaths();
+  }
+}
+
+function setColor(c) {
+  annColor = c;
+  ['red','yellow','cyan'].forEach(id => {
+    document.getElementById('color-' + id).classList.remove('active');
+  });
+  const map = { '#ff3333': 'red', '#ffdd00': 'yellow', '#00ccff': 'cyan' };
+  if (map[c]) document.getElementById('color-' + map[c]).classList.add('active');
+}
+
+function clearAnnotations() {
+  annPaths = [];
+  annCtx.clearRect(0, 0, annCanvas.width, annCanvas.height);
+}
+
+function canvasPos(e) {
+  const r = annCanvas.getBoundingClientRect();
+  const sx = annCanvas.width  / r.width;
+  const sy = annCanvas.height / r.height;
+  return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
+}
+
+function redrawPaths() {
+  annCtx.clearRect(0, 0, annCanvas.width, annCanvas.height);
+  annPaths.forEach(p => drawShape(p));
+}
+
+function drawShape(p) {
+  annCtx.strokeStyle = p.color;
+  annCtx.lineWidth = p.size;
+  annCtx.lineCap = 'round';
+  annCtx.lineJoin = 'round';
+  if (p.type === 'path') {
+    annCtx.beginPath();
+    p.pts.forEach((pt, i) => i === 0 ? annCtx.moveTo(pt.x, pt.y) : annCtx.lineTo(pt.x, pt.y));
+    annCtx.stroke();
+  } else if (p.type === 'box') {
+    annCtx.strokeRect(p.x, p.y, p.w, p.h);
+  }
+}
+
+// Laser pointer loop — animates the dot on mousemove
+function startLaserLoop() {
+  if (laserRaf) return;
+  function frame() {
+    annCtx.clearRect(0, 0, annCanvas.width, annCanvas.height);
+    redrawPaths();
+    if (laserPos) {
+      annCtx.beginPath();
+      annCtx.arc(laserPos.x, laserPos.y, 10, 0, Math.PI * 2);
+      annCtx.fillStyle = annColor;
+      annCtx.fill();
+      annCtx.beginPath();
+      annCtx.arc(laserPos.x, laserPos.y, 12, 0, Math.PI * 2);
+      annCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+      annCtx.lineWidth = 1.5;
+      annCtx.stroke();
+    }
+    laserRaf = requestAnimationFrame(frame);
+  }
+  laserRaf = requestAnimationFrame(frame);
+}
+
+function stopLaserLoop() {
+  if (laserRaf) { cancelAnimationFrame(laserRaf); laserRaf = null; }
+  laserPos = null;
+}
+
+annCanvas.addEventListener('mousemove', e => {
+  if (!annotating) return;
+  const pos = canvasPos(e);
+  if (annMode === 'laser') {
+    laserPos = pos;
+  } else if (annMode === 'draw' && annDrawing) {
+    annPaths[annPaths.length - 1].pts.push(pos);
+    redrawPaths();
+  } else if (annMode === 'box' && annDrawing) {
+    const p = annPaths[annPaths.length - 1];
+    p.w = pos.x - p.x; p.h = pos.y - p.y;
+    redrawPaths();
+  }
+});
+
+annCanvas.addEventListener('mouseleave', () => { laserPos = null; });
+
+annCanvas.addEventListener('mousedown', e => {
+  if (!annotating || annMode === 'laser') return;
+  annDrawing = true;
+  const pos = canvasPos(e);
+  if (annMode === 'draw') {
+    annPaths.push({ type: 'path', color: annColor, size: 3, pts: [pos] });
+  } else if (annMode === 'box') {
+    annPaths.push({ type: 'box', color: annColor, size: 2.5, x: pos.x, y: pos.y, w: 0, h: 0 });
+  }
+});
+
+annCanvas.addEventListener('mouseup', () => { annDrawing = false; });
+
+// ── Slide render ─────────────────────────────────────────────────────────────
 function render() {
   const s = slides[current];
   document.getElementById('slide-img').src = s.img;
   document.getElementById('slide-img').alt = s.title || `Slide ${s.n}`;
-  document.getElementById('slide-title').textContent = s.title ? `Slide ${s.n} — ${s.title}` : `Slide ${s.n}`;
+  document.getElementById('slide-title-text').textContent = s.title ? `Slide ${s.n} — ${s.title}` : `Slide ${s.n}`;
   document.getElementById('counter').textContent = `${s.n} / ${slides.length}`;
   document.getElementById('part-label').textContent = partLabels[s.n] || "";
 
+  // Reset demo
+  resetDemo();
   const demoWrap = document.getElementById('demo-wrap');
-  const gif = document.getElementById('demo-gif');
-  const play = document.getElementById('demo-play');
-  const pending = document.getElementById('demo-pending');
-
-  // Reset gif so it doesn't keep playing from a previous slide
-  gif.src = '';
-  gif.style.display = 'none';
-  play.style.display = 'none';
+  const play     = document.getElementById('demo-play');
+  const pending  = document.getElementById('demo-pending');
   pending.style.display = 'none';
-  pendingGif = null;
 
   if (s.gif === null) {
     demoWrap.style.display = 'none';
@@ -287,28 +578,40 @@ function render() {
 
   document.getElementById('btn-prev').disabled = current === 0;
   document.getElementById('btn-next').disabled = current === slides.length - 1;
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
 
-  document.querySelectorAll('.dot').forEach((d, i) => {
-    d.classList.toggle('active', i === current);
-  });
+  // Reset annotation canvas for new slide
+  annPaths = [];
+  if (annotating) {
+    document.getElementById('slide-img').onload = syncCanvas;
+    annCanvas.style.display = 'block';
+    if (annMode === 'laser') startLaserLoop();
+  } else {
+    annCanvas.style.display = 'none';
+  }
 
   document.getElementById('content').scrollTo(0, 0);
 }
 
 function go(dir) {
   const next = current + dir;
-  if (next >= 0 && next < slides.length) {
-    current = next;
-    render();
-  }
+  if (next >= 0 && next < slides.length) { current = next; render(); }
 }
 
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
   if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
+  if (e.key === 'a' || e.key === 'A') toggleAnnotation();
+  if (e.key === 'Escape' && annotating) toggleAnnotation();
+  if (annotating) {
+    if (e.key === '1') setMode('laser');
+    if (e.key === '2') setMode('draw');
+    if (e.key === '3') setMode('box');
+    if (e.key === 'c' || e.key === 'C') clearAnnotations();
+  }
 });
 
-// Build dots
+// ── Dots ─────────────────────────────────────────────────────────────────────
 const dotsEl = document.getElementById('slide-dots');
 slides.forEach((s, i) => {
   const d = document.createElement('div');
