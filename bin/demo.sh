@@ -65,7 +65,7 @@ run() {
     done
     if [ "$RECORD_MODE" -eq 1 ]; then
         echo -ne "${BOLD}${RECORD_PROMPT}${RESET}"
-        printf '%s' "${display[*]}" | pv -qL 20
+        printf '%s' "${display[*]}" | pv -qL 4
         echo
         sleep 0.3
     else
