@@ -1,8 +1,9 @@
 #!/bin/bash
-# Wrapper for t-rec: records Part 1 of the CyberForge 2026 demo
+# Records Part 1 of the CyberForge 2026 demo using asciinema.
 # Run from the repo root on korell:
-#   t-rec -o docs/recordings/part1 bin/record-part1.sh
+#   asciinema rec docs/recordings/part1.cast --command 'bin/record-part1.sh'
+#   agg docs/recordings/part1.cast docs/recordings/part1.gif
 #
 # Runs automatically — no input needed. Ctrl-C to abort.
 
-ssh ansible 'cd ~/secure_devops_demo && bin/demo.sh --test 1 1'
+ssh ansible 'cd ~/secure_devops_demo && bin/demo.sh --record 1 1'

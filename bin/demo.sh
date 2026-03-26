@@ -7,13 +7,19 @@ cd "$(dirname "$0")/.."
 # Ensure ~/.local/bin is in PATH (ansible installed via uv)
 export PATH="$HOME/.local/bin:$PATH"
 
-# --test flag: run all parts without pausing (for automated testing)
-# Usage: bin/demo.sh [--test] [start_part] [end_part]
+# Flags:
+#   --test    run all parts without pausing (for automated testing)
+#   --record  run without pausing, with pv typing simulation and custom prompt
+# Usage: bin/demo.sh [--test|--record] [start_part] [end_part]
 TEST_MODE=0
-if [ "${1:-}" = "--test" ]; then
-    TEST_MODE=1
-    shift
-fi
+RECORD_MODE=0
+while true; do
+    case "${1:-}" in
+        --test)   TEST_MODE=1; shift ;;
+        --record) RECORD_MODE=1; TEST_MODE=1; shift ;;
+        *)        break ;;
+    esac
+done
 ARG_START="${1:-}"
 ARG_END="${2:-6}"
 
@@ -46,6 +52,8 @@ pause() {
     read -r || true
 }
 
+RECORD_PROMPT='ansible:~/secure_devops_demo$ '
+
 run() {
     local display=()
     for arg in "$@"; do
@@ -55,7 +63,14 @@ run() {
             display+=("$arg")
         fi
     done
-    echo -e "${BOLD}\$ ${display[*]}${RESET}"
+    if [ "$RECORD_MODE" -eq 1 ]; then
+        echo -ne "${BOLD}${RECORD_PROMPT}${RESET}"
+        printf '%s' "${display[*]}" | pv -qL 40
+        echo
+        sleep 0.3
+    else
+        echo -e "${BOLD}\$ ${display[*]}${RESET}"
+    fi
     "$@"
 }
 
