@@ -8,15 +8,19 @@ cd "$(dirname "$0")/.."
 export PATH="$HOME/.local/bin:$PATH"
 
 # Flags:
-#   --test    run all parts without pausing (for automated testing)
-#   --record  run without pausing, with pv typing simulation and custom prompt
-# Usage: bin/demo.sh [--test|--record] [start_part] [end_part]
+#   --test      run all parts without pausing (for automated testing)
+#   --record    run without pausing, with pv typing simulation and custom prompt
+#   --slide N   run only slide N (implies --record; for per-slide GIF recording)
+# Usage: bin/demo.sh [--test|--record|--slide N] [start_part] [end_part]
 TEST_MODE=0
 RECORD_MODE=0
+SLIDE_FILTER=0
+TARGET_SLIDE=""
 while true; do
     case "${1:-}" in
         --test)   TEST_MODE=1; shift ;;
         --record) RECORD_MODE=1; TEST_MODE=1; shift ;;
+        --slide)  SLIDE_FILTER=1; TARGET_SLIDE="$2"; RECORD_MODE=1; TEST_MODE=1; shift 2 ;;
         *)        break ;;
     esac
 done
@@ -33,7 +37,10 @@ RESET='\033[0m'
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+CURRENT_SLIDE=""
+
 header() {
+    [ "$SLIDE_FILTER" -eq 1 ] && return
     echo
     echo -e "${CYAN}${BOLD}══════════════════════════════════════════════════════${RESET}"
     echo -e "${CYAN}${BOLD}  $1${RESET}"
@@ -42,7 +49,14 @@ header() {
 }
 
 slide() {
-    echo -e "${YELLOW}▶ Slide $1 — $2${RESET}"
+    CURRENT_SLIDE="$1"
+    if [ "$SLIDE_FILTER" -eq 0 ] || [ "$CURRENT_SLIDE" = "$TARGET_SLIDE" ]; then
+        echo -e "${YELLOW}▶ Slide $1 — $2${RESET}"
+    fi
+}
+
+in_slide() {
+    [ "$SLIDE_FILTER" -eq 0 ] || [ "$CURRENT_SLIDE" = "$TARGET_SLIDE" ]
 }
 
 pause() {
@@ -91,20 +105,26 @@ before_after() {
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-echo
-echo -e "${BOLD}CyberForge 2026 — Secure DevOps: Setting up a secure environment for Ansible${RESET}"
-echo -e "Running from: $(pwd)"
-echo -e "Control VM:   $(hostname) ($(hostname -I | awk '{print $1}'))"
-echo
-echo "Parts:"
-echo "  1 - SSH Setup Demo       (slides 4-11)"
-echo "  2 - Ansible Setup Demo   (slides 13-15)"
-echo "  3 - Ansible Demo         (slides 17-19)"
-echo "  4 - Storing Secrets      (slides 21-26)"
-echo "  5 - SSHD Hardening       (slides 28-36)"
-echo "  6 - Ad-hoc Commands      (slide 37)"
-echo
-if [ "$TEST_MODE" -eq 1 ]; then
+if [ "$SLIDE_FILTER" -eq 0 ]; then
+    echo
+    echo -e "${BOLD}CyberForge 2026 — Secure DevOps: Setting up a secure environment for Ansible${RESET}"
+    echo -e "Running from: $(pwd)"
+    echo -e "Control VM:   $(hostname) ($(hostname -I | awk '{print $1}'))"
+    echo
+    echo "Parts:"
+    echo "  1 - SSH Setup Demo       (slides 4-11)"
+    echo "  2 - Ansible Setup Demo   (slides 13-15)"
+    echo "  3 - Ansible Demo         (slides 17-19)"
+    echo "  4 - Storing Secrets      (slides 21-26)"
+    echo "  5 - SSHD Hardening       (slides 28-36)"
+    echo "  6 - Ad-hoc Commands      (slide 37)"
+    echo
+fi
+
+if [ "$SLIDE_FILTER" -eq 1 ]; then
+    START_PART=1
+    END_PART=6
+elif [ "$TEST_MODE" -eq 1 ]; then
     START_PART="${ARG_START:-1}"
 elif [ -n "$ARG_START" ]; then
     START_PART="$ARG_START"
@@ -113,7 +133,7 @@ else
     read -r START_PART || true
     START_PART=${START_PART:-1}
 fi
-END_PART="$ARG_END"
+[ "$SLIDE_FILTER" -eq 0 ] && END_PART="$ARG_END"
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PART 1 — SSH Setup Demo
@@ -122,14 +142,18 @@ if [ "$START_PART" -le 1 ] && [ "$END_PART" -ge 1 ]; then
 header "Part 1: SSH Setup Demo  (control VM only — no target VMs yet)"
 
 slide 4 "Generate SSH Keys"
-run ls ~/.ssh/DemoSSHKey*
-pause
-run cat ~/.ssh/DemoSSHKey.pub
-pause
+if in_slide; then
+    run ls ~/.ssh/DemoSSHKey*
+    pause
+    run cat ~/.ssh/DemoSSHKey.pub
+    pause
+fi
 
 slide 7 "Configure SSH Client"
-run cat ~/.ssh/config
-pause
+if in_slide; then
+    run cat ~/.ssh/config
+    pause
+fi
 
 fi
 
@@ -140,8 +164,10 @@ if [ "$START_PART" -le 2 ] && [ "$END_PART" -ge 2 ]; then
 header "Part 2: Ansible Setup Demo  (control VM only)"
 
 slide 13 "Ansible Installed"
-run ansible --version
-pause
+if in_slide; then
+    run ansible --version
+    pause
+fi
 
 fi
 
@@ -152,20 +178,24 @@ if [ "$START_PART" -le 3 ] && [ "$END_PART" -ge 3 ]; then
 header "Part 3: Ansible Demo  (control VM only)"
 
 slide 17 "Our First Ansible Playbook"
-run cat ansible.cfg
-pause
-run cat inventory.ini
-pause
-run cat ping.yml
-pause
-run ansible-playbook ping.yml
-pause
+if in_slide; then
+    run cat ansible.cfg
+    pause
+    run cat inventory.ini
+    pause
+    run cat ping.yml
+    pause
+    run ansible-playbook ping.yml
+    pause
+fi
 
 slide 19 "Update ansible with Ansible"
-run cat update.yml
-pause
-run ansible-playbook update.yml
-pause
+if in_slide; then
+    run cat update.yml
+    pause
+    run ansible-playbook update.yml
+    pause
+fi
 
 fi
 
@@ -176,20 +206,26 @@ if [ "$START_PART" -le 4 ] && [ "$END_PART" -ge 4 ]; then
 header "Part 4: Storing Secrets  (control VM only)"
 
 slide 22 "Ansible Vault"
-run cat vault.yml
-pause
-run ansible-vault view vault.yml
-pause
+if in_slide; then
+    run cat vault.yml
+    pause
+    run ansible-vault view vault.yml
+    pause
+fi
 
 slide 23 "Let's use pass"
-run cat bin/get_vault_pass.sh
-pause
-run pass ansible/vault_password
-pause
+if in_slide; then
+    run cat bin/get_vault_pass.sh
+    pause
+    run pass ansible/vault_password
+    pause
+fi
 
 slide 25 "ansible.cfg with vault_password_file"
-run cat ansible.cfg
-pause
+if in_slide; then
+    run cat ansible.cfg
+    pause
+fi
 
 fi
 
@@ -199,59 +235,79 @@ fi
 if [ "$START_PART" -le 5 ] && [ "$END_PART" -ge 5 ]; then
 header "Part 5: SSHD Hardening  (adding 3 target VMs now)"
 
-echo -e "${YELLOW}${BOLD}Target VMs must be in a fresh state for Part 5.${RESET}"
-echo -e "  Run this on korell, then press ENTER:"
-echo -e ""
-echo -e "  ${BOLD}bin/reset_target_vms.sh${RESET}"
-echo -e ""
-pause
+if [ "$SLIDE_FILTER" -eq 0 ]; then
+    echo -e "${YELLOW}${BOLD}Target VMs must be in a fresh state for Part 5.${RESET}"
+    echo -e "  Run this on korell, then press ENTER:"
+    echo -e ""
+    echo -e "  ${BOLD}bin/reset_target_vms.sh${RESET}"
+    echo -e ""
+    pause
+fi
 
 slide 28 "Let's spin up more machines"
-before_after "inventory.ini" inventory.ini "bin/update_local_inventory.sh"
-pause
+if in_slide; then
+    before_after "inventory.ini" inventory.ini "bin/update_local_inventory.sh"
+    pause
+fi
 
 slide 29 "Ansible to update .bashrc"
-run ansible-playbook add_ssh_key.yml
-pause
+if in_slide; then
+    run ansible-playbook add_ssh_key.yml
+    pause
+fi
 
 slide 30 "Idempotent — run it again"
-run ansible-playbook add_ssh_key.yml
-pause
+if in_slide; then
+    run ansible-playbook add_ssh_key.yml
+    pause
+fi
 
 slide 31 "First connection to servers as root"
-run ansible servers -m ping -u root
-pause
+if in_slide; then
+    run ansible servers -m ping -u root
+    pause
+fi
 
 slide 32 "Add ansible_user to servers"
-run cat add_ansible_user.yml
-pause
-run ansible-playbook add_ansible_user.yml
-pause
+if in_slide; then
+    run cat add_ansible_user.yml
+    pause
+    run ansible-playbook add_ansible_user.yml
+    pause
+fi
 
 slide 33 "Switch SSH config to ansible_user"
-bin/update_ssh_config.sh > /dev/null
-run cat ~/.ssh/config
-pause
+if in_slide; then
+    bin/update_ssh_config.sh > /dev/null
+    run cat ~/.ssh/config
+    pause
+fi
 
 slide 34 "Verify ansible_user can connect"
-run ansible-playbook ping-servers.yml
-pause
+if in_slide; then
+    run ansible-playbook ping-servers.yml
+    pause
+fi
 
 slide 35 "SSHD Hardening"
-echo -e "${BOLD}── BEFORE: sshd_config on all servers ──${RESET}"
-run ansible servers -a "grep -E 'PermitRootLogin|PasswordAuthentication|PubkeyAuthentication' /etc/ssh/sshd_config"
-pause
-run cat sshd_hardening-servers.yml
-pause
-run ansible-playbook sshd_hardening-servers.yml
-echo
-echo -e "${BOLD}── AFTER: sshd_config on all servers ──${RESET}"
-run ansible servers -a "grep -E 'PermitRootLogin|PasswordAuthentication|PubkeyAuthentication' /etc/ssh/sshd_config"
-pause
+if in_slide; then
+    echo -e "${BOLD}── BEFORE: sshd_config on all servers ──${RESET}"
+    run ansible servers -a "grep -E 'PermitRootLogin|PasswordAuthentication|PubkeyAuthentication' /etc/ssh/sshd_config"
+    pause
+    run cat sshd_hardening-servers.yml
+    pause
+    run ansible-playbook sshd_hardening-servers.yml
+    echo
+    echo -e "${BOLD}── AFTER: sshd_config on all servers ──${RESET}"
+    run ansible servers -a "grep -E 'PermitRootLogin|PasswordAuthentication|PubkeyAuthentication' /etc/ssh/sshd_config"
+    pause
+fi
 
 slide 36 "Verify we can still connect"
-run ansible-playbook ping-servers.yml
-pause
+if in_slide; then
+    run ansible-playbook ping-servers.yml
+    pause
+fi
 
 fi
 
@@ -262,16 +318,20 @@ if [ "$START_PART" -le 6 ] && [ "$END_PART" -ge 6 ]; then
 header "Part 6: Ad-hoc Commands"
 
 slide 37 "Ad-hoc commands"
-run ansible servers -m setup -a "filter=ansible_distribution*"
-pause
-run ansible servers -m shell -a "df -h"
-pause
-run ansible servers -a "ss -tuln"
-pause
+if in_slide; then
+    run ansible servers -m setup -a "filter=ansible_distribution*"
+    pause
+    run ansible servers -m shell -a "df -h"
+    pause
+    run ansible servers -a "ss -tuln"
+    pause
+fi
 
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
-echo
-echo -e "${GREEN}${BOLD}Demo complete!${RESET}"
-echo
+if [ "$SLIDE_FILTER" -eq 0 ]; then
+    echo
+    echo -e "${GREEN}${BOLD}Demo complete!${RESET}"
+    echo
+fi
