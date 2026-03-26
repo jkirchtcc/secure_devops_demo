@@ -209,8 +209,8 @@ pause
 run ansible-playbook add_ansible_user.yml
 pause
 
-slide 34 "SSH client config has server entries"
-run cat ~/.ssh/config
+slide 33 "Verify ansible_user can connect first"
+run ansible-playbook ping-servers.yml
 pause
 
 slide 35 "SSHD Hardening"

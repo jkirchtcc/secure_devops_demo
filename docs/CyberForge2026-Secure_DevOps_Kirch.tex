@@ -1022,63 +1022,29 @@ ok: [192.168.122.103]
 % ==============================================================
 % Slide 33 - Wait, what?
 % ==============================================================
-\begin{frame}[fragile]{Wait, what?}
-\begin{termsmall}
-ansible_user@ansible:~/secure_devops_demo$ ansible-playbook sshd_hardening-servers.yml
+\begin{frame}[fragile]{Verify \texttt{ansible\_user} can connect first}
+\begin{term}
+ansible_user@ansible:~/secure_devops_demo$ ansible-playbook ping-servers.yml
 
-PLAY [Configure SSHD for Ubuntu 22.04, 24.04, and 24.10] *****************
+PLAY [Ping servers] ***************************************************
 
-TASK [Gathering Facts] ****************************************************
-fatal: [192.168.122.101]: UNREACHABLE! => {"changed": false, "msg": "Failed
-  to connect to the host via ssh: ansible_user@192.168.122.101: Permission
-  denied (publickey).", "unreachable": true}
-fatal: [192.168.122.102]: UNREACHABLE! => {"changed": false, "msg": "Failed
-  to connect to the host via ssh: ansible_user@192.168.122.102: Permission
-  denied (publickey).", "unreachable": true}
-fatal: [192.168.122.103]: UNREACHABLE! => {"changed": false, "msg": "Failed
-  to connect to the host via ssh: ansible_user@192.168.122.103: Permission
-  denied (publickey).", "unreachable": true}
+TASK [Gathering Facts] ************************************************
+ok: [192.168.122.101]
+ok: [192.168.122.102]
+ok: [192.168.122.103]
 
-PLAY RECAP ****************************************************************
-192.168.122.101    : ok=0  changed=0  unreachable=1  failed=0
-192.168.122.102    : ok=0  changed=0  unreachable=1  failed=0
-192.168.122.103    : ok=0  changed=0  unreachable=1  failed=0
-\end{termsmall}
-\end{frame}
+TASK [Ping the localhost] *********************************************
+ok: [192.168.122.101]
+ok: [192.168.122.102]
+ok: [192.168.122.103]
 
-% ==============================================================
-% Slide 34 - Ahhh, I need an ssh client config
-% ==============================================================
-\begin{frame}[fragile]{Ahhh, I need an ssh client config}
-\begin{termsmall}
-ansible_user@ansible:~/secure_devops_demo$ ls ~/.ssh
-DemoSSHKey  DemoSSHKey.pub  authorized_keys  known_hosts  config
-\end{termsmall}
+PLAY RECAP ************************************************************
+192.168.122.101    : ok=2    changed=0    unreachable=0    failed=0
+192.168.122.102    : ok=2    changed=0    unreachable=0    failed=0
+192.168.122.103    : ok=2    changed=0    unreachable=0    failed=0
+\end{term}
 \vspace{0.2cm}
-\begin{termsmall}
-# BEGIN cyberforge-demo
-Host server1
-    HostName 192.168.122.101
-    User ansible_user
-    IdentityFile ~/.ssh/DemoSSHKey
-    AddKeysToAgent yes
-    StrictHostKeyChecking accept-new
-
-Host server2
-    HostName 192.168.122.102
-    User ansible_user
-    IdentityFile ~/.ssh/DemoSSHKey
-    AddKeysToAgent yes
-    StrictHostKeyChecking accept-new
-
-Host server3
-    HostName 192.168.122.103
-    User ansible_user
-    IdentityFile ~/.ssh/DemoSSHKey
-    AddKeysToAgent yes
-    StrictHostKeyChecking accept-new
-# END cyberforge-demo
-\end{termsmall}
+\textbf{Verify before you lock the door.}
 \end{frame}
 
 % ==============================================================
