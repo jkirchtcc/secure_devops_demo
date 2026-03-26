@@ -6,322 +6,272 @@
 <title>Secure DevOps: Setting up a secure environment for Ansible — CyberForge 2026</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Helvetica, Arial, sans-serif; background: #f4f4f4; color: #222; }
-  header {
+
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #topbar {
     background: #3c5078;
-    color: white;
-    padding: 2rem;
-    text-align: center;
+    padding: 0.6rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
   }
-  header h1 { font-size: 1.6rem; font-weight: bold; }
-  header p { margin-top: 0.5rem; font-size: 1rem; opacity: 0.85; }
-  main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
-  .part-heading {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #3c5078;
-    border-bottom: 2px solid #3c5078;
-    margin: 2.5rem 0 1.5rem;
-    padding-bottom: 0.4rem;
-  }
-  .slide-block {
-    margin-bottom: 2rem;
-    background: white;
-    border-radius: 6px;
-    padding: 1.25rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  }
-  .slide-block .slide-img {
-    max-width: 800px;
-  }
-  .slide-block .slide-img img {
-    width: 100%;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  .slide-block .slide-gif {
-    margin-top: 1rem;
-    max-width: 800px;
-  }
-  .slide-block .slide-gif img {
-    width: 100%;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: #1a1a1a;
-  }
-  .slide-block .slide-gif .no-recording {
-    background: #eee;
-    color: #999;
+  #topbar h1 { font-size: 1rem; font-weight: bold; }
+  #part-label {
     font-size: 0.85rem;
-    text-align: center;
-    padding: 2rem 1rem;
-    border-radius: 4px;
-    border: 1px dashed #ccc;
+    opacity: 0.75;
+    white-space: nowrap;
+    margin-left: 1rem;
   }
-  .slide-label {
-    font-size: 0.8rem;
-    color: #666;
-    margin-bottom: 0.4rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  #counter {
+    font-size: 0.9rem;
+    opacity: 0.85;
+    white-space: nowrap;
   }
-  .slide-title {
+
+  #content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 1rem 1rem;
+    gap: 1rem;
+  }
+
+  #slide-title {
     font-size: 1rem;
     font-weight: bold;
-    margin-bottom: 0.75rem;
-    color: #222;
+    color: #aac4f0;
+    align-self: flex-start;
+    max-width: 900px;
+    width: 100%;
   }
-  footer {
-    text-align: center;
-    padding: 2rem;
-    font-size: 0.85rem;
+
+  #slide-img-wrap {
+    max-width: 900px;
+    width: 100%;
+  }
+  #slide-img-wrap img {
+    width: 100%;
+    border: 1px solid #444;
+    border-radius: 4px;
+    display: block;
+  }
+
+  #demo-wrap {
+    max-width: 900px;
+    width: 100%;
+  }
+  #demo-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
     color: #888;
+    margin-bottom: 0.4rem;
   }
+  #demo-wrap img {
+    width: 100%;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #111;
+    display: block;
+  }
+  #demo-pending {
+    background: #222;
+    border: 1px dashed #444;
+    border-radius: 4px;
+    color: #666;
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  #navbar {
+    flex-shrink: 0;
+    background: #252540;
+    border-top: 1px solid #333;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+  button {
+    background: #3c5078;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  button:hover { background: #4d6490; }
+  button:disabled { background: #333; color: #555; cursor: default; }
+
+  #slide-dots {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 400px;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #444;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .dot.active { background: #7aa0d4; }
+  .dot.has-gif { background: #5a8a5a; }
+  .dot.has-gif.active { background: #8fd48f; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Secure DevOps: Setting up a secure environment for Ansible</h1>
-  <p>CyberForge 2026 &mdash; Joel Kirch</p>
-</header>
-
-<main>
-
-<div class="part-heading">Part 1: SSH Setup</div>
-
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 4</div>
-    <div class="slide-title">Generate SSH Keys</div>
-    <img src="slide-04.png" alt="Slide 4">
+<div id="topbar">
+  <div style="display:flex;align-items:center;gap:0.5rem;min-width:0">
+    <h1>Secure DevOps — CyberForge 2026</h1>
+    <span id="part-label"></span>
   </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <img src="slide-4.gif" alt="Demo: Generate SSH Keys">
+  <span id="counter"></span>
+</div>
+
+<div id="content">
+  <div id="slide-title"></div>
+  <div id="slide-img-wrap"><img id="slide-img" src="" alt=""></div>
+  <div id="demo-wrap" style="display:none">
+    <div id="demo-label">Demo</div>
+    <img id="demo-gif" src="" alt="" style="display:none">
+    <div id="demo-pending" style="display:none">Recording pending</div>
   </div>
 </div>
 
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 7</div>
-    <div class="slide-title">Configure SSH Client</div>
-    <img src="slide-07.png" alt="Slide 7">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <img src="slide-7.gif" alt="Demo: Configure SSH Client">
-  </div>
+<div id="navbar">
+  <button id="btn-prev" onclick="go(-1)">&#8592; Prev</button>
+  <div id="slide-dots"></div>
+  <button id="btn-next" onclick="go(1)">Next &#8594;</button>
 </div>
 
-<div class="part-heading">Part 2: Ansible Setup</div>
+<script>
+const slides = [
+  { n:  1, img: "slide-01.png", title: "", gif: null, part: null },
+  { n:  2, img: "slide-02.png", title: "Today's Topics", gif: null, part: null },
+  { n:  3, img: "slide-03.png", title: "", gif: null, part: "Part 1: SSH Setup" },
+  { n:  4, img: "slide-04.png", title: "Generate SSH Keys", gif: "slide-4.gif", part: null },
+  { n:  5, img: "slide-05.png", title: "Upload SSH Public Key", gif: null, part: null },
+  { n:  6, img: "slide-06.png", title: "RSA 4096 vs ED25519", gif: null, part: null },
+  { n:  7, img: "slide-07.png", title: "Configure SSH Client", gif: "slide-7.gif", part: null },
+  { n:  8, img: "slide-08.png", title: "SSH to ansible, part 1", gif: null, part: null },
+  { n:  9, img: "slide-09.png", title: "CyberSecurity Time", gif: null, part: null },
+  { n: 10, img: "slide-10.png", title: "Update ssh config", gif: null, part: null },
+  { n: 11, img: "slide-11.png", title: "SSH Setup Summary", gif: null, part: null },
+  { n: 12, img: "slide-12.png", title: "", gif: null, part: "Part 2: Ansible Setup" },
+  { n: 13, img: "slide-13.png", title: "Install Ansible", gif: null, part: null },
+  { n: 14, img: "slide-14.png", title: "Logout & Login", gif: null, part: null },
+  { n: 15, img: "slide-15.png", title: "Ansible Installed", gif: "slide-13.gif", part: null },
+  { n: 16, img: "slide-16.png", title: "", gif: null, part: "Part 3: Ansible Demo" },
+  { n: 17, img: "slide-17.png", title: "Our First Ansible Playbook", gif: "slide-17.gif", part: null },
+  { n: 18, img: "slide-18.png", title: "ansible.cfg", gif: null, part: null },
+  { n: 19, img: "slide-19.png", title: "Update ansible with Ansible", gif: "slide-19.gif", part: null },
+  { n: 20, img: "slide-20.png", title: "Ansible with sudo", gif: null, part: null },
+  { n: 21, img: "slide-21.png", title: "Storing Secrets in Ansible", gif: null, part: "Part 4: Storing Secrets" },
+  { n: 22, img: "slide-22.png", title: "Ansible Vault", gif: "slide-22.gif", part: null },
+  { n: 23, img: "slide-23.png", title: "Let's use pass", gif: "slide-23.gif", part: null },
+  { n: 24, img: "slide-24.png", title: "pass uses GPG", gif: null, part: null },
+  { n: 25, img: "slide-25.png", title: "Update ansible.cfg for pass", gif: "slide-25.gif", part: null },
+  { n: 26, img: "slide-26.png", title: "Update our update.yml", gif: null, part: null },
+  { n: 27, img: "slide-27.png", title: "Okay...", gif: null, part: null },
+  { n: 28, img: "slide-28.png", title: "Let's spin up more machines", gif: "pending", part: "Part 5: SSHD Hardening" },
+  { n: 29, img: "slide-29.png", title: "Ansible to update .bashrc", gif: "pending", part: null },
+  { n: 30, img: "slide-30.png", title: "Idempotent", gif: "pending", part: null },
+  { n: 31, img: "slide-31.png", title: "Now we are ready", gif: "pending", part: null },
+  { n: 32, img: "slide-32.png", title: "Add ansible_user to servers", gif: "pending", part: null },
+  { n: 33, img: "slide-33.png", title: "Switch SSH config to ansible_user", gif: "pending", part: null },
+  { n: 34, img: "slide-34.png", title: "Verify ansible_user can connect", gif: "pending", part: null },
+  { n: 35, img: "slide-35.png", title: "SSHD Hardening", gif: "pending", part: null },
+  { n: 36, img: "slide-36.png", title: "Now we can ping servers", gif: "pending", part: null },
+  { n: 37, img: "slide-37.png", title: "Ad-hoc commands", gif: "pending", part: "Part 6: Ad-hoc Commands" },
+  { n: 38, img: "slide-38.png", title: "Summary", gif: null, part: null },
+  { n: 39, img: "slide-39.png", title: "", gif: null, part: null },
+];
 
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 13</div>
-    <div class="slide-title">Ansible Installed</div>
-    <img src="slide-13.png" alt="Slide 13">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <img src="slide-13.gif" alt="Demo: Ansible Installed">
-  </div>
-</div>
+// Track current part label across slides
+let partLabels = {};
+let currentPart = "";
+slides.forEach(s => { if (s.part) currentPart = s.part; partLabels[s.n] = currentPart; });
 
-<div class="part-heading">Part 3: Ansible Demo</div>
+let current = 0;
 
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 17</div>
-    <div class="slide-title">Our First Ansible Playbook</div>
-    <img src="slide-17.png" alt="Slide 17">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <img src="slide-17.gif" alt="Demo: Our First Ansible Playbook">
-  </div>
-</div>
+function render() {
+  const s = slides[current];
+  document.getElementById('slide-img').src = s.img;
+  document.getElementById('slide-img').alt = s.title || `Slide ${s.n}`;
+  document.getElementById('slide-title').textContent = s.title ? `Slide ${s.n} — ${s.title}` : `Slide ${s.n}`;
+  document.getElementById('counter').textContent = `${s.n} / ${slides.length}`;
+  document.getElementById('part-label').textContent = partLabels[s.n] || "";
 
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 19</div>
-    <div class="slide-title">Update ansible with Ansible</div>
-    <img src="slide-19.png" alt="Slide 19">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <img src="slide-19.gif" alt="Demo: Update ansible with Ansible">
-  </div>
-</div>
+  const demoWrap = document.getElementById('demo-wrap');
+  const gif = document.getElementById('demo-gif');
+  const pending = document.getElementById('demo-pending');
 
-<div class="part-heading">Part 4: Storing Secrets</div>
+  if (s.gif === null) {
+    demoWrap.style.display = 'none';
+  } else if (s.gif === 'pending') {
+    demoWrap.style.display = 'block';
+    gif.style.display = 'none';
+    pending.style.display = 'block';
+  } else {
+    demoWrap.style.display = 'block';
+    gif.src = s.gif;
+    gif.style.display = 'block';
+    pending.style.display = 'none';
+  }
 
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 22</div>
-    <div class="slide-title">Ansible Vault</div>
-    <img src="slide-22.png" alt="Slide 22">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <img src="slide-22.gif" alt="Demo: Ansible Vault">
-  </div>
-</div>
+  document.getElementById('btn-prev').disabled = current === 0;
+  document.getElementById('btn-next').disabled = current === slides.length - 1;
 
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 23</div>
-    <div class="slide-title">Let's use pass</div>
-    <img src="slide-23.png" alt="Slide 23">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <img src="slide-23.gif" alt="Demo: Let's use pass">
-  </div>
-</div>
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === current);
+  });
 
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 25</div>
-    <div class="slide-title">ansible.cfg with vault_password_file</div>
-    <img src="slide-25.png" alt="Slide 25">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <img src="slide-25.gif" alt="Demo: ansible.cfg with vault_password_file">
-  </div>
-</div>
+  document.getElementById('content').scrollTo(0, 0);
+}
 
-<div class="part-heading">Part 5: SSHD Hardening</div>
+function go(dir) {
+  const next = current + dir;
+  if (next >= 0 && next < slides.length) {
+    current = next;
+    render();
+  }
+}
 
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 28</div>
-    <div class="slide-title">Let's spin up more machines</div>
-    <img src="slide-28.png" alt="Slide 28">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <div class="no-recording">Recording pending (requires target VMs)</div>
-  </div>
-</div>
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
+});
 
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 29</div>
-    <div class="slide-title">Ansible to update .bashrc</div>
-    <img src="slide-29.png" alt="Slide 29">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <div class="no-recording">Recording pending (requires target VMs)</div>
-  </div>
-</div>
+// Build dots
+const dotsEl = document.getElementById('slide-dots');
+slides.forEach((s, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (s.gif && s.gif !== 'pending' ? ' has-gif' : '');
+  d.title = s.title ? `Slide ${s.n}: ${s.title}` : `Slide ${s.n}`;
+  d.onclick = () => { current = i; render(); };
+  dotsEl.appendChild(d);
+});
 
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 30</div>
-    <div class="slide-title">Idempotent — run it again</div>
-    <img src="slide-30.png" alt="Slide 30">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <div class="no-recording">Recording pending (requires target VMs)</div>
-  </div>
-</div>
-
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 31</div>
-    <div class="slide-title">First connection to servers as root</div>
-    <img src="slide-31.png" alt="Slide 31">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <div class="no-recording">Recording pending (requires target VMs)</div>
-  </div>
-</div>
-
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 32</div>
-    <div class="slide-title">Add ansible_user to servers</div>
-    <img src="slide-32.png" alt="Slide 32">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <div class="no-recording">Recording pending (requires target VMs)</div>
-  </div>
-</div>
-
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 33</div>
-    <div class="slide-title">Switch SSH config to ansible_user</div>
-    <img src="slide-33.png" alt="Slide 33">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <div class="no-recording">Recording pending (requires target VMs)</div>
-  </div>
-</div>
-
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 34</div>
-    <div class="slide-title">Verify ansible_user can connect</div>
-    <img src="slide-34.png" alt="Slide 34">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <div class="no-recording">Recording pending (requires target VMs)</div>
-  </div>
-</div>
-
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 35</div>
-    <div class="slide-title">SSHD Hardening</div>
-    <img src="slide-35.png" alt="Slide 35">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <div class="no-recording">Recording pending (requires target VMs)</div>
-  </div>
-</div>
-
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 36</div>
-    <div class="slide-title">Verify we can still connect</div>
-    <img src="slide-36.png" alt="Slide 36">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <div class="no-recording">Recording pending (requires target VMs)</div>
-  </div>
-</div>
-
-<div class="part-heading">Part 6: Ad-hoc Commands</div>
-
-<div class="slide-block">
-  <div class="slide-img">
-    <div class="slide-label">Slide 37</div>
-    <div class="slide-title">Ad-hoc commands</div>
-    <img src="slide-37.png" alt="Slide 37">
-  </div>
-  <div class="slide-gif">
-    <div class="slide-label">Demo</div>
-    <div class="no-recording">Recording pending (requires target VMs)</div>
-  </div>
-</div>
-
-</main>
-
-<footer>
-  CyberForge 2026 &mdash; Secure DevOps: Setting up a secure environment for Ansible
-</footer>
-
+render();
+</script>
 </body>
 </html>
