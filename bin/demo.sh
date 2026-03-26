@@ -2,8 +2,10 @@
 # CyberForge 2026 — Interactive Demo Runner
 # Run this from ~/secure_devops_demo on the ansible control VM
 
-set -e
 cd "$(dirname "$0")/.."
+
+# Ensure ~/.local/bin is in PATH (ansible installed via uv)
+export PATH="$HOME/.local/bin:$PATH"
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 BOLD='\033[1m'
@@ -30,7 +32,7 @@ slide() {
 pause() {
     echo
     echo -e "${GREEN}[Press ENTER to continue]${RESET}"
-    read -r
+    read -r || true
 }
 
 run() {
@@ -69,7 +71,7 @@ echo "  5 - SSHD Hardening       (slides 28-36)"
 echo "  6 - Ad-hoc Commands      (slide 37)"
 echo
 echo -e "Enter part number to jump to a specific part, or press ENTER to start from Part 1:"
-read -r START_PART
+read -r START_PART || true
 START_PART=${START_PART:-1}
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -155,6 +157,12 @@ fi
 # ══════════════════════════════════════════════════════════════════════════════
 if [ "$START_PART" -le 5 ]; then
 header "Part 5: SSHD Hardening  (adding 3 target VMs now)"
+
+echo -e "${RED}${BOLD}NOTE: Target VMs must be in a FRESH state for Part 5.${RESET}"
+echo -e "      If you have run this before, recreate them first:"
+echo -e "      ${BOLD}sudo virsh destroy target-{1,2,3} && bin/create_target_vms.sh${RESET}"
+echo -e "      (run from the HOST, not this VM)"
+pause
 
 slide 28 "Let's spin up more machines"
 before_after "inventory.ini" inventory.ini "bin/update_local_inventory.sh"

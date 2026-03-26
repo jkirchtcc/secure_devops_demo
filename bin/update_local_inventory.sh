@@ -72,4 +72,10 @@ fi
 echo "$SSH_BLOCK" >> "$SSH_CONFIG"
 echo "Updated $SSH_CONFIG"
 
+# Clear stale known_hosts entries for target IPs (new VMs have new host keys)
+for IP in "$SERVER1_IP" "$SERVER2_IP" "$SERVER3_IP"; do
+    ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$IP" 2>/dev/null || true
+done
+echo "Cleared stale known_hosts entries for target IPs"
+
 echo "Done. Inventory and SSH config are ready for local targets."
