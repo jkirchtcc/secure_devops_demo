@@ -138,7 +138,8 @@
     border-color: transparent transparent transparent rgba(255,255,255,0.9);
     margin-left: 5px;
   }
-  #demo-player { position: relative; }
+  #demo-player { cursor: pointer; }
+  #demo-player:hover #demo-gif  { opacity: 0.92; }
   #demo-gif {
     width: 100%;
     border: 1px solid #444;
@@ -146,14 +147,13 @@
     background: #111;
     display: block;
   }
-  /* Freeze-frame canvas drawn over the GIF when paused */
+  /* Freeze-frame canvas — block sibling of gif, shown in its place when paused */
   #demo-freeze {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    width: 100%;
+    border: 1px solid #444;
     border-radius: 4px;
     display: none;
-    cursor: default;
+    cursor: pointer;
   }
   #demo-controls {
     display: none;
@@ -249,7 +249,7 @@
   <!-- Demo view -->
   <div id="demo-wrap" style="display:none">
     <div id="demo-play" onclick="startDemo()"><div class="play-icon"></div></div>
-    <div id="demo-player" style="display:none">
+    <div id="demo-player" style="display:none" onclick="togglePlayPause()">
       <img id="demo-gif" src="" alt="">
       <canvas id="demo-freeze"></canvas>
     </div>
@@ -353,10 +353,12 @@ function togglePlayPause() {
 function pauseGif() {
   const gif    = document.getElementById('demo-gif');
   const freeze = document.getElementById('demo-freeze');
-  // Size the canvas to match the gif's rendered size exactly
-  freeze.width  = gif.offsetWidth;
-  freeze.height = gif.offsetHeight;
+  // Draw current frame at the gif's natural pixel dimensions
+  freeze.width  = gif.naturalWidth  || gif.offsetWidth;
+  freeze.height = gif.naturalHeight || gif.offsetHeight;
   freeze.getContext('2d').drawImage(gif, 0, 0, freeze.width, freeze.height);
+  // Swap: hide gif, show frozen canvas in its place
+  gif.style.display    = 'none';
   freeze.style.display = 'block';
   document.getElementById('btn-playpause').textContent = '▶ Resume';
   gifPlaying = false;
@@ -365,9 +367,9 @@ function pauseGif() {
 function resumeGif() {
   const gif    = document.getElementById('demo-gif');
   const freeze = document.getElementById('demo-freeze');
-  // Restart GIF by resetting src
   gif.src = '';
   gif.src = currentGifSrc;
+  gif.style.display    = 'block';
   freeze.style.display = 'none';
   document.getElementById('btn-playpause').textContent = '⏸ Pause';
   gifPlaying = true;
@@ -390,6 +392,7 @@ function resetDemoPlayer() {
   const playBtn = document.getElementById('demo-play');
   const controls = document.getElementById('demo-controls');
   gif.src = '';
+  gif.style.display    = 'block';
   freeze.style.display = 'none';
   player.style.display = 'none';
   playBtn.style.display = 'flex';
