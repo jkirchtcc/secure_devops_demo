@@ -44,7 +44,7 @@ pause() {
 
 run() {
     echo -e "${BOLD}\$ $*${RESET}"
-    eval "$@"
+    "$@"
 }
 
 before_after() {
