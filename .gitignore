@@ -9,6 +9,9 @@ DO_TOKEN
 !*.tfvars.example
 inventory-local.ini
 
+# Vim swap files
+*.swp
+
 # LaTeX build artifacts
 *.aux
 *.log
@@ -20,3 +23,4 @@ inventory-local.ini
 *.listing
 docs/recordings/*.gif
 docs/recordings/*.png
+docs/_minted-*/

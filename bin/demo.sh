@@ -71,8 +71,13 @@ RECORD_CMD_PAUSE=1.5   # seconds to pause after each command output
 RECORD_END_PAUSE=3     # seconds to hold at end of slide before GIF loops
 
 hold() {
-    # Pause at end of a slide recording so output is readable before loop
-    [ "$RECORD_MODE" -eq 1 ] && sleep "$RECORD_END_PAUSE"
+    # Pause at end of a slide recording so output is readable before loop.
+    # The printf emits a no-op ANSI sequence AFTER the sleep so asciinema
+    # records a terminal event at the hold-end timestamp — without it the
+    # player has no event to anchor the end time and loops immediately.
+    if [ "$RECORD_MODE" -eq 1 ]; then
+        sleep "$RECORD_END_PAUSE"
+    fi
 }
 
 run() {
@@ -152,7 +157,8 @@ header "Part 1: SSH Setup Demo  (control VM only — no target VMs yet)"
 
 slide 4 "Generate SSH Keys"
 if in_slide; then
-    run ls ~/.ssh/DemoSSHKey*
+    rm -f ~/.ssh/DemoSSHKey ~/.ssh/DemoSSHKey.pub
+    run ssh-keygen -t ed25519 -C "DemoSSHKey" -f ~/.ssh/DemoSSHKey -N ""
     pause
     run cat ~/.ssh/DemoSSHKey.pub
     pause
@@ -221,9 +227,9 @@ header "Part 4: Storing Secrets  (control VM only)"
 
 slide 22 "Ansible Vault"
 if in_slide; then
-    run cat vault.yml
-    pause
     run ansible-vault view vault.yml
+    pause
+    run cat vault.yml
     pause
     hold
 fi
@@ -240,6 +246,8 @@ fi
 slide 25 "ansible.cfg with vault_password_file"
 if in_slide; then
     run cat ansible.cfg
+    pause
+    run cat bin/get_vault_pass.sh
     pause
     hold
 fi
@@ -270,6 +278,8 @@ fi
 
 slide 29 "Ansible to update .bashrc"
 if in_slide; then
+    run cat add_ssh_key.yml
+    pause
     run ansible-playbook add_ssh_key.yml
     pause
     hold
@@ -282,9 +292,9 @@ if in_slide; then
     hold
 fi
 
-slide 31 "First connection to servers as root"
+slide 31 "Now we are ready"
 if in_slide; then
-    run ansible servers -m ping -u root
+    ANSIBLE_HOST_KEY_CHECKING=False run ansible-playbook ping-servers.yml
     pause
     hold
 fi

@@ -56,15 +56,16 @@
 \lstdefinestyle{terminalsmall}{ basicstyle=\ttfamily\tiny\color{termwhite} }
 \lstdefinestyle{config}{ basicstyle=\ttfamily\small\color{termwhite} }
 
+\usepackage{minted}
 \usepackage{tcolorbox}
-\tcbuselibrary{listings,skins}
+\tcbuselibrary{listings,skins,minted}
 
 % tcolorbox wraps the listing in one continuous colored box (no per-line stripes)
 \newtcblisting{term}{
   colback=darkterm, colframe=darkterm,
   arc=4pt, boxrule=0pt,
   left=6pt, right=6pt, top=4pt, bottom=4pt,
-  listing only,
+  listing only, listing engine=listings,
   listing options={style=terminal},
 }
 
@@ -72,7 +73,7 @@
   colback=darkterm, colframe=darkterm,
   arc=4pt, boxrule=0pt,
   left=6pt, right=6pt, top=4pt, bottom=4pt,
-  listing only,
+  listing only, listing engine=listings,
   listing options={style=terminalsmall},
 }
 
@@ -80,8 +81,76 @@
   colback=darkterm, colframe=darkterm,
   arc=4pt, boxrule=0pt,
   left=6pt, right=6pt, top=4pt, bottom=4pt,
-  listing only,
+  listing only, listing engine=listings,
   listing options={style=config},
+}
+
+% ── Minted (Pygments) syntax-highlighted code boxes ──────────────────────────
+\tcbset{mintedbase/.style={
+  colback=darkterm, colframe=darkterm,
+  arc=4pt, boxrule=0pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  listing only,
+}}
+% YAML — for Ansible playbooks
+\newtcblisting{codeyaml}{mintedbase,
+  minted language=yaml,
+  minted options={style=monokai,fontsize=\scriptsize,breaklines=true},
+}
+\newtcblisting{codeyamlsmall}{
+  colback=darkterm, colframe=darkterm,
+  arc=4pt, boxrule=0pt,
+  left=4pt, right=4pt, top=2pt, bottom=2pt,
+  listing only,
+  minted language=yaml,
+  minted options={style=monokai,fontsize=\tiny,breaklines=true,baselinestretch=0.85},
+}
+% Bash — for shell commands and scripts
+\newtcblisting{codebash}{mintedbase,
+  minted language=bash,
+  minted options={style=monokai,fontsize=\small,breaklines=true},
+}
+\newtcblisting{codebashsmall}{
+  colback=darkterm, colframe=darkterm,
+  arc=4pt, boxrule=0pt,
+  left=4pt, right=4pt, top=2pt, bottom=2pt,
+  listing only,
+  minted language=bash,
+  minted options={style=monokai,fontsize=\tiny,breaklines=true,baselinestretch=0.85},
+}
+% INI — for ansible.cfg and inventory files
+\newtcblisting{codeini}{mintedbase,
+  minted language=ini,
+  minted options={style=monokai,fontsize=\scriptsize,breaklines=true},
+}
+% SSH config — text (no dedicated Pygments lexer; box style stays consistent)
+\newtcblisting{codessh}{mintedbase,
+  minted language=text,
+  minted options={style=monokai,fontsize=\small,breaklines=true},
+}
+\newtcblisting{codesshsmall}{
+  colback=darkterm, colframe=darkterm,
+  arc=4pt, boxrule=0pt,
+  left=4pt, right=4pt, top=2pt, bottom=2pt,
+  listing only,
+  minted language=text,
+  minted options={style=monokai,fontsize=\tiny,breaklines=true,baselinestretch=0.85},
+}
+
+% ── Emphasis colors for Ansible output in terminal blocks ────────────────────
+\lstdefinestyle{terminal}{
+  basicstyle=\ttfamily\scriptsize\color{termwhite},
+  emph={ok,changed,CHANGED},
+  emphstyle=\color{termgreen}\bfseries,
+  emph={[2]fatal,FAILED,UNREACHABLE},
+  emphstyle={[2]\color{termred}\bfseries},
+}
+\lstdefinestyle{terminalsmall}{
+  basicstyle=\ttfamily\tiny\color{termwhite},
+  emph={ok,changed,CHANGED},
+  emphstyle=\color{termgreen}\bfseries,
+  emph={[2]fatal,FAILED,UNREACHABLE},
+  emphstyle={[2]\color{termred}\bfseries},
 }
 
 \title{\Huge Secure DevOps}
@@ -148,9 +217,9 @@
   \item Generate an ED25519 SSH key with the comment ``DemoSSHKey'' and save it using that same filename -- \textcolor{highlight}{USE A PASSWORD to protect your SSH Key.}
 \end{itemize}
 \vspace{0.2cm}
-\begin{conf}
+\begin{codebash}
 ssh-keygen -t ed25519 -C "DemoSSHKey" -f DemoSSHKey
-\end{conf}
+\end{codebash}
 \begin{itemize}
   \item This command breaks down as follows:
   \begin{itemize}
@@ -176,9 +245,9 @@ ssh-keygen -t ed25519 -C "DemoSSHKey" -f DemoSSHKey
   \item For cloud providers (e.g., DigitalOcean), paste the key in the SSH Keys section of the console
 \end{itemize}
 \vspace{0.3cm}
-\begin{conf}
+\begin{codebash}
 cat ~/.ssh/DemoSSHKey.pub
-\end{conf}
+\end{codebash}
 \end{frame}
 
 % ==============================================================
@@ -209,12 +278,12 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDGwqTc2eyAVxspuLyNERj
 % Slide 7 - Configure SSH Client
 % ==============================================================
 \begin{frame}[fragile]{Configure SSH Client}
-\begin{conf}
+\begin{codessh}
 Host ansible
     HostName 192.168.122.100
     User root
     IdentityFile ~/.ssh/DemoSSHKey
-\end{conf}
+\end{codessh}
 \vspace{0.3cm}
 \textbf{\texttt{Host ansible}}: Creates an alias ``ansible'' for easy connection.\\[0.2cm]
 \textbf{\texttt{HostName 192.168.122.100}}: Sets the server's IP address.\\[0.2cm]
@@ -249,13 +318,13 @@ root@ansible:~#
 \end{itemize}
 \vspace{0.2cm}
 \textcolor{arrowred}{$\Rightarrow$}
-\begin{termsmall}
+\begin{codesshsmall}
 Host ansible
     HostName 192.168.122.100
     User root
     AddKeysToAgent yes
     IdentityFile ~/.ssh/DemoSSHKey
-\end{termsmall}
+\end{codesshsmall}
 \end{column}
 \end{columns}
 \end{frame}
@@ -305,13 +374,13 @@ PasswordAuthentication no   <--
   \item Update my ssh client config to use \textbf{\texttt{ansible\_user}} instead of \textbf{\texttt{root}}
 \end{itemize}
 \vspace{0.3cm}
-\begin{term}
+\begin{codessh}
 Host ansible
     HostName 192.168.122.100
     User ansible_user
     AddKeysToAgent yes
     IdentityFile ~/.ssh/DemoSSHKey
-\end{term}
+\end{codessh}
 \end{column}
 \begin{column}{0.52\textwidth}
 \begin{termsmall}
@@ -438,19 +507,19 @@ ansible [core 2.18.1]
 \end{itemize}
 \end{column}
 \begin{column}{0.62\textwidth}
-\begin{termsmall}
+\begin{codeini}
 [local]
 localhost ansible_connection=local
-\end{termsmall}
+\end{codeini}
 \vspace{0.1cm}
-\begin{termsmall}
+\begin{codeyamlsmall}
 ---
 - name: Ping localhost
   hosts: local
   tasks:
     - name: Ping the localhost
       ping:
-\end{termsmall}
+\end{codeyamlsmall}
 \end{column}
 \end{columns}
 \vspace{0.2cm}
@@ -473,14 +542,14 @@ localhost           : ok=2    changed=0    unreachable=0    failed=0
 \begin{frame}[fragile]{ansible.cfg}
 \begin{columns}[T]
 \begin{column}{0.45\textwidth}
-\begin{term}
+\begin{codeini}
 [defaults]
 inventory = inventory.ini
 command_warnings = False
 deprecation_warnings = False
 interpreter_python =
     /usr/bin/python3
-\end{term}
+\end{codeini}
 \vspace{0.3cm}
 Add the inventory location and turn off those warnings
 \end{column}
@@ -509,7 +578,7 @@ localhost  : ok=2  changed=0  failed=0
 \begin{frame}[fragile]{Update ansible with Ansible}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
-\begin{term}
+\begin{codeyaml}
 ---
 - name: Update and upgrade packages
     on localhost
@@ -521,7 +590,7 @@ localhost  : ok=2  changed=0  failed=0
     - name: Upgrade all packages
       apt:
         upgrade: dist
-\end{term}
+\end{codeyaml}
 \end{column}
 \begin{column}{0.48\textwidth}
 \begin{itemize}
@@ -686,7 +755,7 @@ ansible_user@ansible:~$ xxd
 \vspace{0.2cm}
 \begin{columns}[T]
 \begin{column}{0.55\textwidth}
-\begin{term}
+\begin{codeini}
 [defaults]
 inventory = inventory.ini
 command_warnings = False
@@ -694,13 +763,13 @@ deprecation_warnings = False
 interpreter_python = /usr/bin/python3
 vault_password_file =
     bin/get_vault_pass.sh
-\end{term}
+\end{codeini}
 \end{column}
 \begin{column}{0.4\textwidth}
-\begin{term}
+\begin{codebash}
 #!/bin/bash
 pass ansible/vault_password
-\end{term}
+\end{codebash}
 \end{column}
 \end{columns}
 \vspace{0.3cm}
@@ -716,7 +785,7 @@ pass ansible/vault_password
 \begin{frame}[fragile]{Update our \texttt{update.yml}}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
-\begin{term}
+\begin{codeyaml}
 ---
 - name: Update and upgrade packages
     on localhost
@@ -729,7 +798,7 @@ pass ansible/vault_password
     - name: Upgrade all packages
       apt:
         upgrade: dist
-\end{term}
+\end{codeyaml}
 \end{column}
 \begin{column}{0.48\textwidth}
 \begin{termsmall}
@@ -800,7 +869,7 @@ Done. Run bin/update_ssh_config.sh after creating ansible_user.
 \begin{frame}[fragile]{Ansible to update \texttt{.bashrc}}
 \begin{columns}[T]
 \begin{column}{0.58\textwidth}
-\begin{termsmall}
+\begin{codeyamlsmall}
 ---
 - hosts: localhost
   tasks:
@@ -822,12 +891,12 @@ Done. Run bin/update_ssh_config.sh after creating ansible_user.
             source ~/.ssh-agent-variables
           fi
         create: yes
-\end{termsmall}
+\end{codeyamlsmall}
 \end{column}
 \begin{column}{0.38\textwidth}
 Now the \texttt{.bashrc} file is updated to start the SSH-Agent when the user logs in
 \vspace{0.3cm}
-\begin{termsmall}
+\begin{codebashsmall}
 # BEGIN Ansible SSH agent
 #   configuration
 # Ansible modified: SSH agent
@@ -843,7 +912,7 @@ then
 fi
 # END Ansible SSH agent
 #   configuration
-\end{termsmall}
+\end{codebashsmall}
 \end{column}
 \end{columns}
 \end{frame}
@@ -922,7 +991,7 @@ fatal: [192.168.122.102]: UNREACHABLE! => {"changed": false, "msg": "Failed
 \begin{frame}[fragile]{Add \texttt{ansible\_user} to servers}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
-\begin{termsmall}
+\begin{codeyamlsmall}
 ---
 - name: Add ansible_user to the sudo
     group, set up SSH key, and set
@@ -946,7 +1015,7 @@ fatal: [192.168.122.102]: UNREACHABLE! => {"changed": false, "msg": "Failed
         append: true
         password: "{{ ansible_user_password
           | password_hash('sha512') }}"
-\end{termsmall}
+\end{codeyamlsmall}
 \end{column}
 \begin{column}{0.48\textwidth}
 \begin{termsmall}
@@ -990,7 +1059,7 @@ ok: [192.168.122.103]
 % Slide 33 - Wait, what?
 % ==============================================================
 \begin{frame}[fragile]{Switch SSH config to \texttt{ansible\_user}}
-\begin{termsmall}
+\begin{codesshsmall}
 ansible_user@ansible:~/secure_devops_demo$ cat ~/.ssh/config
 # BEGIN cyberforge-demo
 Host server1
@@ -1014,7 +1083,7 @@ Host server3
     AddKeysToAgent yes
     StrictHostKeyChecking accept-new
 # END cyberforge-demo
-\end{termsmall}
+\end{codesshsmall}
 \end{frame}
 
 % ==============================================================
@@ -1051,7 +1120,7 @@ PLAY RECAP ************************************************************
 \begin{frame}[fragile]{SSHD Hardening}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
-\begin{termsmall}
+\begin{codeyamlsmall}
 ---
 - name: Configure SSHD for Ubuntu
     22.04, 24.04, and 24.10
@@ -1083,7 +1152,7 @@ PLAY RECAP ************************************************************
       service:
         name: ssh
         state: restarted
-\end{termsmall}
+\end{codeyamlsmall}
 \end{column}
 \begin{column}{0.48\textwidth}
 \begin{termsmall}

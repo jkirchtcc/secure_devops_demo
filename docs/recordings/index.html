@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Secure DevOps: Setting up a secure environment for Ansible — CyberForge 2026</title>
+<link rel="stylesheet" href="asciinema-player.css">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -37,6 +38,7 @@
     align-items: center;
     padding: 1.5rem 1rem 1rem;
     gap: 0.75rem;
+    position: relative;
   }
 
   #entry-title {
@@ -51,11 +53,10 @@
     gap: 0.75rem;
   }
 
-  /* ── Slide image + annotation overlay ── */
+  /* ── Slide image ── */
   #slide-wrap {
     max-width: 900px;
     width: 100%;
-    position: relative;
   }
   #slide-img {
     width: 100%;
@@ -63,12 +64,13 @@
     border-radius: 4px;
     display: block;
   }
+
+  /* ── Annotation canvas — floats over the active content area ── */
   #annotation-canvas {
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    border-radius: 4px;
     display: none;
+    border-radius: 4px;
+    z-index: 10;
   }
   #annotation-canvas.laser { cursor: none; }
   #annotation-canvas.draw  { cursor: crosshair; }
@@ -105,73 +107,16 @@
   }
   .ann-color.active { border-color: white; }
 
-  /* ── Demo (GIF) view ── */
+  /* ── Demo (asciinema) view ── */
   #demo-wrap {
     max-width: 900px;
     width: 100%;
-    position: relative;
   }
-  #demo-play {
-    cursor: pointer;
-    border: 1px solid #444;
-    border-radius: 4px;
-    background: #111;
-    aspect-ratio: 16/9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  #demo-play:hover .play-icon { transform: scale(1.1); }
-  .play-icon {
-    width: 72px; height: 72px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.1s;
-  }
-  .play-icon::after {
-    content: '';
-    border-style: solid;
-    border-width: 14px 0 14px 26px;
-    border-color: transparent transparent transparent rgba(255,255,255,0.9);
-    margin-left: 5px;
-  }
-  #demo-player { cursor: pointer; }
-  #demo-player:hover #demo-gif  { opacity: 0.92; }
-  #demo-gif {
+  #ap-container {
     width: 100%;
-    border: 1px solid #444;
     border-radius: 4px;
-    background: #111;
-    display: block;
+    overflow: hidden;
   }
-  /* Freeze-frame canvas — block sibling of gif, shown in its place when paused */
-  #demo-freeze {
-    width: 100%;
-    border: 1px solid #444;
-    border-radius: 4px;
-    display: none;
-    cursor: pointer;
-  }
-  #demo-controls {
-    display: none;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-    align-items: center;
-  }
-  #demo-controls.visible { display: flex; }
-  .ctrl-btn {
-    background: #2a2a4a;
-    border: 1px solid #555;
-    color: #ccc;
-    border-radius: 4px;
-    padding: 0.3rem 0.75rem;
-    font-size: 0.8rem;
-    cursor: pointer;
-  }
-  .ctrl-btn:hover { background: #3a3a6a; }
   #demo-pending {
     background: #222;
     border: 1px dashed #444;
@@ -240,23 +185,17 @@
     <button class="ann-btn" onclick="toggleAnnotation()" style="margin-left:auto">Done</button>
   </div>
 
+  <!-- Annotation canvas — repositioned over active content by syncCanvas() -->
+  <canvas id="annotation-canvas"></canvas>
+
   <!-- Slide view -->
   <div id="slide-wrap" style="display:none">
     <img id="slide-img" src="" alt="">
-    <canvas id="annotation-canvas"></canvas>
   </div>
 
   <!-- Demo view -->
   <div id="demo-wrap" style="display:none">
-    <div id="demo-play" onclick="startDemo()"><div class="play-icon"></div></div>
-    <div id="demo-player" style="display:none" onclick="togglePlayPause()">
-      <img id="demo-gif" src="" alt="">
-      <canvas id="demo-freeze"></canvas>
-    </div>
-    <div id="demo-controls">
-      <button class="ctrl-btn" id="btn-playpause" onclick="togglePlayPause()">&#9646;&#9646; Pause</button>
-      <button class="ctrl-btn" onclick="replayDemo()">&#8635; Replay</button>
-    </div>
+    <div id="ap-container"></div>
     <div id="demo-pending" style="display:none">Recording coming soon</div>
   </div>
 </div>
@@ -267,48 +206,49 @@
   <button id="btn-next" onclick="go(1)">Next &#8594;</button>
 </div>
 
+<script src="asciinema-player.min.js"></script>
 <script>
 // ── Data ─────────────────────────────────────────────────────────────────────
 const slideData = [
-  { n:  1, img: "slide-01.png", title: "", gif: null, part: null },
-  { n:  2, img: "slide-02.png", title: "Today's Topics", gif: null, part: null },
-  { n:  3, img: "slide-03.png", title: "", gif: null, part: "Part 1: SSH Setup" },
-  { n:  4, img: "slide-04.png", title: "Generate SSH Keys", gif: "slide-4.gif", part: null },
-  { n:  5, img: "slide-05.png", title: "Upload SSH Public Key", gif: null, part: null },
-  { n:  6, img: "slide-06.png", title: "RSA 4096 vs ED25519", gif: null, part: null },
-  { n:  7, img: "slide-07.png", title: "Configure SSH Client", gif: "slide-7.gif", part: null },
-  { n:  8, img: "slide-08.png", title: "SSH to ansible, part 1", gif: null, part: null },
-  { n:  9, img: "slide-09.png", title: "CyberSecurity Time", gif: null, part: null },
-  { n: 10, img: "slide-10.png", title: "Update ssh config", gif: null, part: null },
-  { n: 11, img: "slide-11.png", title: "SSH Setup Summary", gif: null, part: null },
-  { n: 12, img: "slide-12.png", title: "", gif: null, part: "Part 2: Ansible Setup" },
-  { n: 13, img: "slide-13.png", title: "Install Ansible", gif: null, part: null },
-  { n: 14, img: "slide-14.png", title: "Logout & Login", gif: null, part: null },
-  { n: 15, img: "slide-15.png", title: "Ansible Installed", gif: "slide-13.gif", part: null },
-  { n: 16, img: "slide-16.png", title: "", gif: null, part: "Part 3: Ansible Demo" },
-  { n: 17, img: "slide-17.png", title: "Our First Ansible Playbook", gif: "slide-17.gif", part: null },
-  { n: 18, img: "slide-18.png", title: "ansible.cfg", gif: null, part: null },
-  { n: 19, img: "slide-19.png", title: "Update ansible with Ansible", gif: "slide-19.gif", part: null },
-  { n: 20, img: "slide-20.png", title: "Ansible with sudo", gif: null, part: null },
-  { n: 21, img: "slide-21.png", title: "Storing Secrets in Ansible", gif: null, part: "Part 4: Storing Secrets" },
-  { n: 22, img: "slide-22.png", title: "Ansible Vault", gif: "slide-22.gif", part: null },
-  { n: 23, img: "slide-23.png", title: "Let's use pass", gif: "slide-23.gif", part: null },
-  { n: 24, img: "slide-24.png", title: "pass uses GPG", gif: null, part: null },
-  { n: 25, img: "slide-25.png", title: "Update ansible.cfg for pass", gif: "slide-25.gif", part: null },
-  { n: 26, img: "slide-26.png", title: "Update our update.yml", gif: null, part: null },
-  { n: 27, img: "slide-27.png", title: "Okay...", gif: null, part: null },
-  { n: 28, img: "slide-28.png", title: "Let's spin up more machines", gif: "pending", part: "Part 5: SSHD Hardening" },
-  { n: 29, img: "slide-29.png", title: "Ansible to update .bashrc", gif: "pending", part: null },
-  { n: 30, img: "slide-30.png", title: "Idempotent", gif: "pending", part: null },
-  { n: 31, img: "slide-31.png", title: "Now we are ready", gif: "pending", part: null },
-  { n: 32, img: "slide-32.png", title: "Add ansible_user to servers", gif: "pending", part: null },
-  { n: 33, img: "slide-33.png", title: "Switch SSH config to ansible_user", gif: "pending", part: null },
-  { n: 34, img: "slide-34.png", title: "Verify ansible_user can connect", gif: "pending", part: null },
-  { n: 35, img: "slide-35.png", title: "SSHD Hardening", gif: "pending", part: null },
-  { n: 36, img: "slide-36.png", title: "Now we can ping servers", gif: "pending", part: null },
-  { n: 37, img: "slide-37.png", title: "Ad-hoc commands", gif: "pending", part: "Part 6: Ad-hoc Commands" },
-  { n: 38, img: "slide-38.png", title: "Summary", gif: null, part: null },
-  { n: 39, img: "slide-39.png", title: "", gif: null, part: null },
+  { n:  1, img: "slide-01.png", title: "", cast: null, part: null },
+  { n:  2, img: "slide-02.png", title: "Today's Topics", cast: null, part: null },
+  { n:  3, img: "slide-03.png", title: "", cast: null, part: "Part 1: SSH Setup" },
+  { n:  4, img: "slide-04.png", title: "Generate SSH Keys", cast: "slide-4.cast", part: null },
+  { n:  5, img: "slide-05.png", title: "Upload SSH Public Key", cast: null, part: null },
+  { n:  6, img: "slide-06.png", title: "RSA 4096 vs ED25519", cast: null, part: null },
+  { n:  7, img: "slide-07.png", title: "Configure SSH Client", cast: "slide-7.cast", part: null },
+  { n:  8, img: "slide-08.png", title: "SSH to ansible, part 1", cast: null, part: null },
+  { n:  9, img: "slide-09.png", title: "CyberSecurity Time", cast: null, part: null },
+  { n: 10, img: "slide-10.png", title: "Update ssh config", cast: null, part: null },
+  { n: 11, img: "slide-11.png", title: "SSH Setup Summary", cast: null, part: null },
+  { n: 12, img: "slide-12.png", title: "", cast: null, part: "Part 2: Ansible Setup" },
+  { n: 13, img: "slide-13.png", title: "Install Ansible", cast: null, part: null },
+  { n: 14, img: "slide-14.png", title: "Logout & Login", cast: null, part: null },
+  { n: 15, img: "slide-15.png", title: "Ansible Installed", cast: "slide-13.cast", part: null },
+  { n: 16, img: "slide-16.png", title: "", cast: null, part: "Part 3: Ansible Demo" },
+  { n: 17, img: "slide-17.png", title: "Our First Ansible Playbook", cast: "slide-17.cast", part: null },
+  { n: 18, img: "slide-18.png", title: "ansible.cfg", cast: null, part: null },
+  { n: 19, img: "slide-19.png", title: "Update ansible with Ansible", cast: "slide-19.cast", part: null },
+  { n: 20, img: "slide-20.png", title: "Ansible with sudo", cast: null, part: null },
+  { n: 21, img: "slide-21.png", title: "Storing Secrets in Ansible", cast: null, part: "Part 4: Storing Secrets" },
+  { n: 22, img: "slide-22.png", title: "Ansible Vault", cast: "slide-22.cast", part: null },
+  { n: 23, img: "slide-23.png", title: "Let's use pass", cast: "slide-23.cast", part: null },
+  { n: 24, img: "slide-24.png", title: "pass uses GPG", cast: null, part: null },
+  { n: 25, img: "slide-25.png", title: "Update ansible.cfg for pass", cast: "slide-25.cast", part: null },
+  { n: 26, img: "slide-26.png", title: "Update our update.yml", cast: null, part: null },
+  { n: 27, img: "slide-27.png", title: "Okay...", cast: null, part: null },
+  { n: 28, img: "slide-28.png", title: "Let's spin up more machines", cast: "slide-28.cast", part: "Part 5: SSHD Hardening" },
+  { n: 29, img: "slide-29.png", title: "Ansible to update .bashrc", cast: "slide-29.cast", part: null },
+  { n: 30, img: "slide-30.png", title: "Idempotent", cast: "slide-30.cast", part: null },
+  { n: 31, img: "slide-31.png", title: "Now we are ready", cast: "slide-31.cast", part: null },
+  { n: 32, img: "slide-32.png", title: "Add ansible_user to servers", cast: "slide-32.cast", part: null },
+  { n: 33, img: "slide-33.png", title: "Switch SSH config to ansible_user", cast: "slide-33.cast", part: null },
+  { n: 34, img: "slide-34.png", title: "Verify ansible_user can connect", cast: "slide-34.cast", part: null },
+  { n: 35, img: "slide-35.png", title: "SSHD Hardening", cast: "slide-35.cast", part: null },
+  { n: 36, img: "slide-36.png", title: "Now we can ping servers", cast: "slide-36.cast", part: null },
+  { n: 37, img: "slide-37.png", title: "Ad-hoc commands", cast: "slide-37.cast", part: "Part 6: Ad-hoc Commands" },
+  { n: 38, img: "slide-38.png", title: "Summary", cast: null, part: null },
+  { n: 39, img: "slide-39.png", title: "", cast: null, part: null },
 ];
 
 // Build part label map
@@ -320,85 +260,21 @@ slideData.forEach(s => { if (s.part) cp = s.part; partLabels[s.n] = cp; });
 const entries = [];
 slideData.forEach(s => {
   entries.push({ type: 'slide', slide: s });
-  if (s.gif) {
+  if (s.cast) {
     entries.push({ type: 'demo', slide: s });
   }
 });
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let current = 0;
-let gifPlaying = false;
-let currentGifSrc = null;
+let currentPlayer = null;
 
-// ── GIF player ────────────────────────────────────────────────────────────────
-function startDemo() {
-  const s = entries[current].slide;
-  currentGifSrc = s.gif;
-  const gif      = document.getElementById('demo-gif');
-  const player   = document.getElementById('demo-player');
-  const playBtn  = document.getElementById('demo-play');
-  const controls = document.getElementById('demo-controls');
-  gif.src = currentGifSrc;
-  player.style.display = 'block';
-  playBtn.style.display = 'none';
-  controls.classList.add('visible');
-  document.getElementById('btn-playpause').textContent = '⏸ Pause';
-  gifPlaying = true;
-}
-
-function togglePlayPause() {
-  gifPlaying ? pauseGif() : resumeGif();
-}
-
-function pauseGif() {
-  const gif    = document.getElementById('demo-gif');
-  const freeze = document.getElementById('demo-freeze');
-  // Draw current frame at the gif's natural pixel dimensions
-  freeze.width  = gif.naturalWidth  || gif.offsetWidth;
-  freeze.height = gif.naturalHeight || gif.offsetHeight;
-  freeze.getContext('2d').drawImage(gif, 0, 0, freeze.width, freeze.height);
-  // Swap: hide gif, show frozen canvas in its place
-  gif.style.display    = 'none';
-  freeze.style.display = 'block';
-  document.getElementById('btn-playpause').textContent = '▶ Resume';
-  gifPlaying = false;
-}
-
-function resumeGif() {
-  const gif    = document.getElementById('demo-gif');
-  const freeze = document.getElementById('demo-freeze');
-  gif.src = '';
-  gif.src = currentGifSrc;
-  gif.style.display    = 'block';
-  freeze.style.display = 'none';
-  document.getElementById('btn-playpause').textContent = '⏸ Pause';
-  gifPlaying = true;
-}
-
-function replayDemo() {
-  const gif    = document.getElementById('demo-gif');
-  const freeze = document.getElementById('demo-freeze');
-  gif.src = '';
-  gif.src = currentGifSrc;
-  freeze.style.display = 'none';
-  document.getElementById('btn-playpause').textContent = '⏸ Pause';
-  gifPlaying = true;
-}
-
-function resetDemoPlayer() {
-  const gif     = document.getElementById('demo-gif');
-  const freeze  = document.getElementById('demo-freeze');
-  const player  = document.getElementById('demo-player');
-  const playBtn = document.getElementById('demo-play');
-  const controls = document.getElementById('demo-controls');
-  gif.src = '';
-  gif.style.display    = 'block';
-  freeze.style.display = 'none';
-  player.style.display = 'none';
-  playBtn.style.display = 'flex';
-  controls.classList.remove('visible');
-  currentGifSrc = null;
-  gifPlaying = false;
+function destroyPlayer() {
+  if (currentPlayer) {
+    currentPlayer.dispose();
+    currentPlayer = null;
+  }
+  document.getElementById('ap-container').innerHTML = '';
 }
 
 // ── Annotation ────────────────────────────────────────────────────────────────
@@ -436,9 +312,21 @@ function toggleAnnotation() {
 }
 
 function syncCanvas() {
-  const img = document.getElementById('slide-img');
-  annCanvas.width  = img.offsetWidth;
-  annCanvas.height = img.offsetHeight;
+  const content = document.getElementById('content');
+  const entry   = entries[current];
+  const target  = entry.type === 'slide'
+    ? document.getElementById('slide-img')
+    : document.getElementById('ap-container');
+
+  const cr = content.getBoundingClientRect();
+  const tr = target.getBoundingClientRect();
+
+  annCanvas.style.left   = (tr.left - cr.left) + 'px';
+  annCanvas.style.top    = (tr.top  - cr.top + content.scrollTop) + 'px';
+  annCanvas.style.width  = tr.width  + 'px';
+  annCanvas.style.height = tr.height + 'px';
+  annCanvas.width        = tr.width;
+  annCanvas.height       = tr.height;
   redrawPaths();
 }
 
@@ -550,6 +438,7 @@ function render() {
 
   if (entry.type === 'slide') {
     // ── Slide page ──
+    destroyPlayer();
     slideWrap.style.display = 'block';
     demoWrap.style.display  = 'none';
     annBtn.style.display    = 'inline-block';
@@ -571,24 +460,36 @@ function render() {
     // ── Demo page ──
     slideWrap.style.display = 'none';
     demoWrap.style.display  = 'block';
-    annBtn.style.display    = 'none';
+    annBtn.style.display    = 'inline-block';
 
     document.getElementById('entry-title-text').textContent =
       `Demo — ${s.title || 'Slide ' + s.n}`;
 
-    resetDemoPlayer();
+    destroyPlayer();
 
-    const pending = document.getElementById('demo-pending');
-    if (s.gif === 'pending') {
-      document.getElementById('demo-play').style.display = 'none';
+    const apContainer = document.getElementById('ap-container');
+    const pending     = document.getElementById('demo-pending');
+
+    if (s.cast === 'pending') {
+      apContainer.style.display = 'none';
       pending.style.display = 'block';
     } else {
-      document.getElementById('demo-play').style.display = 'flex';
+      apContainer.style.display = 'block';
       pending.style.display = 'none';
+      currentPlayer = AsciinemaPlayer.create(s.cast, apContainer, {
+        autoPlay: true,
+        loop: true,
+        fit: 'width',
+        terminalFontSize: 'big',
+        terminalLineHeight: 1.2,
+        theme: 'monokai',
+      });
     }
 
-    // Turn off annotation when entering demo view
-    if (annotating) toggleAnnotation();
+    // Re-sync annotation canvas position if currently annotating
+    if (annotating) {
+      requestAnimationFrame(syncCanvas);
+    }
   }
 
   document.getElementById('btn-prev').disabled = current === 0;
@@ -605,7 +506,7 @@ function go(dir) {
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
   if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
-  if ((e.key === 'a' || e.key === 'A') && entries[current].type === 'slide') toggleAnnotation();
+  if (e.key === 'a' || e.key === 'A') toggleAnnotation();
   if (e.key === 'Escape' && annotating) toggleAnnotation();
   if (annotating) {
     if (e.key === '1') setMode('laser');
@@ -620,7 +521,7 @@ const dotsEl = document.getElementById('slide-dots');
 entries.forEach((e, i) => {
   const d = document.createElement('div');
   if (e.type === 'demo') {
-    d.className = e.slide.gif === 'pending' ? 'dot is-pending' : 'dot is-demo';
+    d.className = e.slide.cast === 'pending' ? 'dot is-pending' : 'dot is-demo';
     d.title = `Demo: ${e.slide.title || 'Slide ' + e.slide.n}`;
   } else {
     d.className = 'dot';
