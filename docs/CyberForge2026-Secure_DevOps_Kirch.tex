@@ -1,4 +1,4 @@
-\documentclass[aspectratio=169]{beamer}
+\documentclass[aspectratio=169,12pt]{beamer}
 
 % Theme and colors to match the blue/gray style
 \usetheme{default}
@@ -86,11 +86,15 @@
 }
 
 % ── Minted (Pygments) syntax-highlighted code boxes ──────────────────────────
+% before upper={\color{termwhite}} ensures bare text tokens (no Pygments color)
+% inherit white instead of beamer's black normal text color. In listing only
+% mode, the listing content lives in the upper area of the tcolorbox.
 \tcbset{mintedbase/.style={
   colback=darkterm, colframe=darkterm,
   arc=4pt, boxrule=0pt,
   left=6pt, right=6pt, top=4pt, bottom=4pt,
   listing only,
+  before upper={\color{termwhite}},
 }}
 % YAML — for Ansible playbooks
 \newtcblisting{codeyaml}{mintedbase,
@@ -102,6 +106,7 @@
   arc=4pt, boxrule=0pt,
   left=4pt, right=4pt, top=2pt, bottom=2pt,
   listing only,
+  before upper={\color{termwhite}},
   minted language=yaml,
   minted options={style=monokai,fontsize=\tiny,breaklines=true,baselinestretch=0.85},
 }
@@ -115,6 +120,7 @@
   arc=4pt, boxrule=0pt,
   left=4pt, right=4pt, top=2pt, bottom=2pt,
   listing only,
+  before upper={\color{termwhite}},
   minted language=bash,
   minted options={style=monokai,fontsize=\tiny,breaklines=true,baselinestretch=0.85},
 }
@@ -123,18 +129,29 @@
   minted language=ini,
   minted options={style=monokai,fontsize=\scriptsize,breaklines=true},
 }
-% SSH config — text (no dedicated Pygments lexer; box style stays consistent)
-\newtcblisting{codessh}{mintedbase,
-  minted language=text,
-  minted options={style=monokai,fontsize=\small,breaklines=true},
+\newtcblisting{codeinismall}{
+  colback=darkterm, colframe=darkterm,
+  arc=4pt, boxrule=0pt,
+  left=4pt, right=4pt, top=2pt, bottom=2pt,
+  listing only,
+  before upper={\color{termwhite}},
+  minted language=ini,
+  minted options={style=monokai,fontsize=\tiny,breaklines=true,baselinestretch=0.85},
+}
+% SSH config — lstlistings (no Pygments lexer available; lstlistings is simpler and reliable)
+\newtcblisting{codessh}{
+  colback=darkterm, colframe=darkterm,
+  arc=4pt, boxrule=0pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  listing only, listing engine=listings,
+  listing options={style=config},
 }
 \newtcblisting{codesshsmall}{
   colback=darkterm, colframe=darkterm,
   arc=4pt, boxrule=0pt,
   left=4pt, right=4pt, top=2pt, bottom=2pt,
-  listing only,
-  minted language=text,
-  minted options={style=monokai,fontsize=\tiny,breaklines=true,baselinestretch=0.85},
+  listing only, listing engine=listings,
+  listing options={style=terminalsmall},
 }
 
 % ── Emphasis colors for Ansible output in terminal blocks ────────────────────
@@ -218,19 +235,21 @@
 \end{itemize}
 \vspace{0.2cm}
 \begin{codebash}
-ssh-keygen -t ed25519 -C "DemoSSHKey" -f DemoSSHKey
+ssh-keygen -t ed25519 -C DemoSSHKey \
+  -f /home/ansible_user/.ssh/DemoSSHKey -N ""
 \end{codebash}
 \begin{itemize}
   \item This command breaks down as follows:
   \begin{itemize}
     \item \textbf{\texttt{-t ed25519}}: Specifies the type of key to generate (ED25519).
-    \item \textbf{\texttt{-C "DemoSSHKey"}}: Adds the comment ``DemoSSHKey'' to the key
-    \item \textbf{\texttt{-f DemoSSHKey}}: Saves the private key to a file named \texttt{DemoSSHKey} and the public key to a file named \texttt{DemoSSHKey.pub}.
+    \item \textbf{\texttt{-C DemoSSHKey}}: Adds the comment ``DemoSSHKey'' to the key
+    \item \textbf{\texttt{-f \ldots/DemoSSHKey}}: Saves keys to \texttt{\textasciitilde/.ssh/DemoSSHKey} and \texttt{.pub}.
+    \item \textbf{\texttt{-N ""}}: Empty passphrase (demo only --- use a real one in production!)
   \end{itemize}
   \item After running this command, you'll have two files:
   \begin{itemize}
-    \item DemoSSHKey (the private key)
-    \item DemoSSHKey.pub (the corresponding public key)
+    \item \textasciitilde/.ssh/DemoSSHKey (the private key)
+    \item \textasciitilde/.ssh/DemoSSHKey.pub (the corresponding public key)
   \end{itemize}
 \end{itemize}
 \end{frame}
@@ -317,7 +336,6 @@ root@ansible:~#
     \textbf{\texttt{AddKeysToAgent yes}}
 \end{itemize}
 \vspace{0.2cm}
-\textcolor{arrowred}{$\Rightarrow$}
 \begin{codesshsmall}
 Host ansible
     HostName 192.168.122.100
@@ -507,11 +525,12 @@ ansible [core 2.18.1]
 \end{itemize}
 \end{column}
 \begin{column}{0.62\textwidth}
+\texttt{\$ cat inventory.ini}
 \begin{codeini}
 [local]
 localhost ansible_connection=local
 \end{codeini}
-\vspace{0.1cm}
+\texttt{\$ cat ping.yml}
 \begin{codeyamlsmall}
 ---
 - name: Ping localhost
@@ -522,9 +541,9 @@ localhost ansible_connection=local
 \end{codeyamlsmall}
 \end{column}
 \end{columns}
-\vspace{0.2cm}
+\vspace{0.1cm}
 \begin{termsmall}
-ansible_user@ansible:~/secure_devops_demo$ ansible-playbook ping.yml
+ansible_user@ansible:~/secure_devops_demo$ ansible-playbook -i inventory.ini ping.yml
 
 PLAY [Ping localhost] *****************************************************
 TASK [Gathering Facts] ****************************************************
@@ -762,7 +781,7 @@ command_warnings = False
 deprecation_warnings = False
 interpreter_python = /usr/bin/python3
 vault_password_file =
-    bin/get_vault_pass.sh
+    /home/ansible_user/bin/get_vault_pass.sh
 \end{codeini}
 \end{column}
 \begin{column}{0.4\textwidth}
@@ -847,20 +866,33 @@ localhost  : ok=3  changed=1
 % ==============================================================
 \begin{frame}[fragile]{Let's spin up more machines}
 \begin{itemize}
-  \item 3 local VMs on QEMU/KVM -- no internet needed
-  \item Add them to \textbf{\texttt{inventory.ini}} so Ansible can reach them
+  \item 3 local VMs on QEMU/KVM (no internet needed) --- cloud-init injects your public key automatically
 \end{itemize}
-\vspace{0.3cm}
-\begin{term}
-ansible_user@ansible:~/secure_devops_demo$ bin/update_local_inventory.sh
-Local VM IPs (static):
-  target-1: 192.168.122.101
-  target-2: 192.168.122.102
-  target-3: 192.168.122.103
-Updated inventory.ini
-Cleared stale known_hosts entries for target IPs
-Done. Run bin/update_ssh_config.sh after creating ansible_user.
-\end{term}
+\vspace{0.15cm}
+\begin{columns}[T]
+\begin{column}{0.44\textwidth}
+\textbf{BEFORE:} \texttt{inventory.ini}
+\vspace{0.1cm}
+\begin{codeinismall}
+[servers]
+\end{codeinismall}
+\vspace{0.15cm}
+\begin{codebashsmall}
+$ bin/create_target_vms.sh
+$ bin/update_local_inventory.sh
+\end{codebashsmall}
+\end{column}
+\begin{column}{0.52\textwidth}
+\textbf{AFTER:} \texttt{inventory.ini}
+\vspace{0.1cm}
+\begin{codeinismall}
+[servers]
+target-1 ansible_host=192.168.122.101
+target-2 ansible_host=192.168.122.102
+target-3 ansible_host=192.168.122.103
+\end{codeinismall}
+\end{column}
+\end{columns}
 \end{frame}
 
 % ==============================================================

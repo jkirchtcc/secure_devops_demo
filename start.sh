@@ -2,9 +2,9 @@
 # Start the slideshow web server and open it in a browser.
 # Run from the repo root.
 
-cd "$(dirname "$0")/docs/recordings"
+cd "$(dirname "$0")/docs"
 PORT=8765
-URL="http://localhost:${PORT}/"
+URL="http://localhost:${PORT}/recordings/"
 
 echo "Slideshow: $URL"
 echo "Press Ctrl+C to stop."
