@@ -17,3 +17,4 @@ inventory-local.ini
 docs/recordings/*.gif
 docs/recordings/*.png
 docs/_minted-*/
+DEMO_SCRIPT.md
