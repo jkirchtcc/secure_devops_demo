@@ -86,7 +86,9 @@ hold() {
 run() {
     local display=()
     for arg in "$@"; do
-        if [[ "$arg" == *" "* ]]; then
+        if [[ -z "$arg" ]]; then
+            display+=('""')
+        elif [[ "$arg" == *" "* ]]; then
             display+=("\"$arg\"")
         else
             display+=("$arg")
