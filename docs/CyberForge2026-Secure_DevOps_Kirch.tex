@@ -583,6 +583,13 @@ localhost  : ok=2  changed=0  failed=0
 % Slide 19 - Update ansible with Ansible
 % ==============================================================
 \begin{frame}[fragile]{Update ansible with Ansible}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$ ansible-playbook update.yml
+PLAY [Update and upgrade packages on localhost] ***************************
+TASK [Gathering Facts] ****************************************************
+fatal: [localhost]: FAILED! => {"msg": "sudo: a password is required\n"}
+\end{termsmall}
+\vspace{0.2cm}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
 \begin{codeyaml}
@@ -607,13 +614,6 @@ localhost  : ok=2  changed=0  failed=0
 \end{itemize}
 \end{column}
 \end{columns}
-\vspace{0.2cm}
-\begin{termsmall}
-ansible_user@ansible:~/secure_devops_demo$ ansible-playbook update.yml
-PLAY [Update and upgrade packages on localhost] ***************************
-TASK [Gathering Facts] ****************************************************
-fatal: [localhost]: FAILED! => {"msg": "sudo: a password is required\n"}
-\end{termsmall}
 \end{frame}
 
 % ==============================================================
