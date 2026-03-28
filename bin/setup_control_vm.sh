@@ -12,12 +12,7 @@ echo ""
 # Install prerequisites
 echo "--- Installing prerequisites ---"
 sudo apt-get update
-sudo apt-get install -y jq gnupg openssh-client git curl
-
-# Install OpenTofu
-echo ""
-echo "--- Installing OpenTofu ---"
-"$REPO_DIR/bin/install_opentofu.sh"
+sudo apt-get install -y gnupg openssh-client git curl
 
 # Install Ansible
 echo ""
@@ -41,22 +36,11 @@ else
     echo "SSH key already exists at ~/.ssh/DemoSSHKey"
 fi
 
-# DO token setup
-echo ""
-echo "--- DigitalOcean API Token ---"
-if pass digitalocean/api_token &>/dev/null; then
-    echo "DO token already stored in pass."
-else
-    echo "Store your DigitalOcean API token in pass:"
-    echo "  pass insert digitalocean/api_token"
-    echo "(You can do this later if you only need local targets.)"
-fi
-
 echo ""
 echo "=== Control VM setup complete ==="
 echo ""
 echo "Next steps:"
-echo "  1. Copy ~/.ssh/DemoSSHKey.pub to the host for local target VMs"
-echo "  2. Run 'bin/create_target_vms.sh' on the host to create local targets"
-echo "  3. Run 'bin/update_local_inventory.sh' to populate the inventory"
-echo "  4. Run 'ansible-playbook add_ansible_user.yml' to configure targets"
+echo "  1. Copy ~/.ssh/DemoSSHKey.pub to the host (korell)"
+echo "  2. Run 'bin/create_target_vms.sh' on the host to create 3 target VMs"
+echo "  3. Run 'bin/update_local_inventory.sh' to populate inventory.ini"
+echo "  4. Run 'ansible-playbook ping-servers.yml' to verify connectivity"

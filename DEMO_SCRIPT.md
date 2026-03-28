@@ -8,14 +8,11 @@
 
 - [ ] Laptop charged and plugged in, adapter tested with projector
 - [ ] Terminal font >= 16pt, dark theme
-- [ ] QEMU/KVM control VM started
-- [ ] Local target VMs created (`bin/create_target_vms.sh`) and running
-- [ ] Internet connectivity verified (for Phase 2)
-- [ ] `export TF_VAR_do_token=$(pass digitalocean/api_token)` run in control VM
-- [ ] DigitalOcean console open in browser (fallback for Phase 2)
+- [ ] QEMU/KVM control VM started (`ssh ansible`)
+- [ ] Local target VMs in fresh state (`bin/reset_target_vms.sh` on korell)
 - [ ] This demo script open in a second terminal
-- [ ] Verify `ansible`, `tofu`, `pass`, `gpg`, `jq` installed in control VM
-- [ ] Previous demo infrastructure torn down (local: `bin/destroy_target_vms.sh`, cloud: `bin/teardown.sh`)
+- [ ] Verify `ansible`, `pass`, `gpg` installed in control VM
+- [ ] `pass ansible/vault_password` returns the vault password without error
 
 ---
 
@@ -44,7 +41,7 @@ cat ~/.ssh/DemoSSHKey.pub
 ### Slide 5 - Upload SSH Public Key
 
 **Talking points (no live commands):**
-- Upload the public key to your cloud provider (DigitalOcean console shown)
+- Upload the public key to your servers or cloud provider
 - The public key is safe to share — that's the whole point
 
 ### Slide 6 - RSA 4096 vs ED25519
@@ -385,11 +382,3 @@ ansible servers -a "ss -tuln"
 bin/destroy_target_vms.sh
 ```
 
----
-
-## Fallback Plan
-
-If WiFi fails during the live demo:
-1. The local demo (Parts 1-6) is a complete presentation
-2. Show the OpenTofu code and explain what it would do
-3. "The same playbooks you just saw work against local VMs would configure cloud servers — the only difference is the inventory file"
