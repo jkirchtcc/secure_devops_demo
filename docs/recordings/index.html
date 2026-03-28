@@ -58,11 +58,14 @@
     max-width: 900px;
     width: 100%;
   }
-  #slide-img {
+  #slide-imgs img {
     width: 100%;
     border: 1px solid #444;
     border-radius: 4px;
     display: block;
+  }
+  #slide-imgs img + img {
+    margin-top: 0.5rem;
   }
 
   /* ── Annotation canvas — floats over the active content area ── */
@@ -190,7 +193,7 @@
 
   <!-- Slide view -->
   <div id="slide-wrap" style="display:none">
-    <img id="slide-img" src="" alt="">
+    <div id="slide-imgs"></div>
   </div>
 
   <!-- Demo view -->
@@ -210,51 +213,51 @@
 <script>
 // ── Data ─────────────────────────────────────────────────────────────────────
 const slideData = [
-  { n:  1, img: "slide-01.png", title: "", cast: null, part: null },
-  { n:  2, img: "slide-02.png", title: "Today's Topics", cast: null, part: null },
-  { n:  3, img: "slide-03.png", title: "", cast: null, part: "Part 1: SSH Setup" },
-  { n:  4, img: "slide-04.png", title: "Generate SSH Keys", cast: "slide-4.cast", part: null },
-  { n:  5, img: "slide-05.png", title: "Upload SSH Public Key", cast: null, part: null },
-  { n:  6, img: "slide-06.png", title: "RSA 4096 vs ED25519", cast: null, part: null },
-  { n:  7, img: "slide-07.png", title: "Configure SSH Client", cast: "slide-7.cast", part: null },
-  { n:  8, img: "slide-08.png", title: "SSH to ansible, part 1", cast: null, part: null },
-  { n:  9, img: "slide-09.png", title: "CyberSecurity Time", cast: null, part: null },
-  { n: 10, img: "slide-10.png", title: "Update ssh config", cast: null, part: null },
-  { n: 11, img: "slide-11.png", title: "SSH Setup Summary", cast: null, part: null },
-  { n: 12, img: "slide-12.png", title: "", cast: null, part: "Part 2: Ansible Setup" },
-  { n: 13, img: "slide-13.png", title: "Install Ansible", cast: null, part: null },
-  { n: 14, img: "slide-14.png", title: "Logout & Login", cast: null, part: null },
-  { n: 15, img: "slide-15.png", title: "Ansible Installed", cast: "slide-13.cast", part: null },
-  { n: 16, img: "slide-16.png", title: "", cast: null, part: "Part 3: Ansible Demo" },
-  { n: 17, img: "slide-17.png", title: "Our First Ansible Playbook", cast: "slide-17.cast", part: null },
-  { n: 18, img: "slide-18.png", title: "ansible.cfg", cast: null, part: null },
-  { n: 19, img: "slide-19.png", title: "Update ansible with Ansible", cast: "slide-19.cast", part: null },
-  { n: 20, img: "slide-20.png", title: "Ansible with sudo", cast: null, part: null },
-  { n: 21, img: "slide-21.png", title: "Storing Secrets in Ansible", cast: null, part: "Part 4: Storing Secrets" },
-  { n: 22, img: "slide-22.png", title: "Ansible Vault", cast: "slide-22.cast", part: null },
-  { n: 23, img: "slide-23.png", title: "Let's use pass", cast: "slide-23.cast", part: null },
-  { n: 24, img: "slide-24.png", title: "pass uses GPG", cast: null, part: null },
-  { n: 25, img: "slide-25.png", title: "Update ansible.cfg for pass", cast: "slide-25.cast", part: null },
-  { n: 26, img: "slide-26.png", title: "Update our update.yml", cast: null, part: null },
-  { n: 27, img: "slide-27.png", title: "Okay...", cast: null, part: null },
-  { n: 28, img: "slide-28.png", title: "Let's spin up more machines", cast: "slide-28.cast", part: "Part 5: SSHD Hardening" },
-  { n: 29, img: "slide-29.png", title: "Ansible to update .bashrc", cast: "slide-29.cast", part: null },
-  { n: 30, img: "slide-30.png", title: "Idempotent", cast: "slide-30.cast", part: null },
-  { n: 31, img: "slide-31.png", title: "Now we are ready", cast: "slide-31.cast", part: null },
-  { n: 32, img: "slide-32.png", title: "Add ansible_user to servers", cast: "slide-32.cast", part: null },
-  { n: 33, img: "slide-33.png", title: "Switch SSH config to ansible_user", cast: "slide-33.cast", part: null },
-  { n: 34, img: "slide-34.png", title: "Verify ansible_user can connect", cast: "slide-34.cast", part: null },
-  { n: 35, img: "slide-35.png", title: "SSHD Hardening", cast: "slide-35.cast", part: null },
-  { n: 36, img: "slide-36.png", title: "Now we can ping servers", cast: "slide-36.cast", part: null },
-  { n: 37, img: "slide-37.png", title: "Ad-hoc commands", cast: "slide-37.cast", part: "Part 6: Ad-hoc Commands" },
-  { n: 38, img: "slide-38.png", title: "Summary", cast: null, part: null },
-  { n: 39, img: "slide-39.png", title: "", cast: null, part: null },
+  { n:  1, imgs: ["slide-01.png"], title: "", cast: null, part: null },
+  { n:  2, imgs: ["slide-02.png"], title: "Today's Topics", cast: null, part: null },
+  { n:  3, imgs: ["slide-03.png"], title: "", cast: null, part: "Part 1: SSH Setup" },
+  { n:  4, imgs: ["slide-04.png"], title: "Generate SSH Keys", cast: "slide-4.cast", part: null },
+  { n:  5, imgs: ["../screenshots/Upload_SSH_Public_Key.png"], title: "Upload SSH Public Key", cast: null, part: null },
+  { n:  6, imgs: ["../screenshots/RSA4096_vs_ED25519.png"], title: "RSA 4096 vs ED25519", cast: null, part: null },
+  { n:  7, imgs: ["slide-07.png"], title: "Configure SSH Client", cast: "slide-7.cast", part: null },
+  { n:  8, imgs: ["../screenshots/SSH_to_ansible-part1-A.png","../screenshots/SSH_to_ansible-part1-B.png"], title: "SSH to ansible, part 1", cast: null, part: null },
+  { n:  9, imgs: ["../screenshots/Cybersecurity_Time.png"], title: "CyberSecurity Time", cast: null, part: null },
+  { n: 10, imgs: ["../screenshots/Update_ssh_config-A.png","../screenshots/Update_ssh_config-B.png"], title: "Update ssh config", cast: null, part: null },
+  { n: 11, imgs: ["slide-11.png"], title: "SSH Setup Summary", cast: null, part: null },
+  { n: 12, imgs: ["slide-12.png"], title: "", cast: null, part: "Part 2: Ansible Setup" },
+  { n: 13, imgs: ["../screenshots/Install_Ansible.png"], title: "Install Ansible", cast: null, part: null },
+  { n: 14, imgs: ["../screenshots/Logout_Login-A.png","../screenshots/Logout_Login-B.png"], title: "Logout & Login", cast: null, part: null },
+  { n: 15, imgs: ["../screenshots/Ansible_Installed.png"], title: "Ansible Installed", cast: "slide-13.cast", part: null },
+  { n: 16, imgs: ["slide-16.png"], title: "", cast: null, part: "Part 3: Ansible Demo" },
+  { n: 17, imgs: ["slide-17.png"], title: "Our First Ansible Playbook", cast: "slide-17.cast", part: null },
+  { n: 18, imgs: ["slide-18.png"], title: "ansible.cfg", cast: null, part: null },
+  { n: 19, imgs: ["../screenshots/Update_ansible_with_Ansible-A.png","../screenshots/Update_ansible_with_Ansible-B.png"], title: "Update ansible with Ansible", cast: "slide-19.cast", part: null },
+  { n: 20, imgs: ["../screenshots/Ansible_with_sudo.png"], title: "Ansible with sudo", cast: null, part: null },
+  { n: 21, imgs: ["slide-21.png"], title: "Storing Secrets in Ansible", cast: null, part: "Part 4: Storing Secrets" },
+  { n: 22, imgs: ["slide-22.png"], title: "Ansible Vault", cast: "slide-22.cast", part: null },
+  { n: 23, imgs: ["../screenshots/Lets_use_pass.png"], title: "Let's use pass", cast: "slide-23.cast", part: null },
+  { n: 24, imgs: ["../screenshots/pass_uses_gpg-A.png","../screenshots/pass_uses_gpg-B.png","../screenshots/pass_uses_gpg-C.png","../screenshots/pass_uses_gpg-D.png"], title: "pass uses GPG", cast: null, part: null },
+  { n: 25, imgs: ["slide-25.png"], title: "Update ansible.cfg for pass", cast: "slide-25.cast", part: null },
+  { n: 26, imgs: ["../screenshots/Update_our_update-A.png","../screenshots/Update_our_update-B.png"], title: "Update our update.yml", cast: null, part: null },
+  { n: 27, imgs: ["slide-27.png"], title: "Okay...", cast: null, part: null },
+  { n: 28, imgs: ["slide-28.png"], title: "Let's spin up more machines", cast: "slide-28.cast", part: "Part 5: SSHD Hardening" },
+  { n: 29, imgs: ["slide-29.png"], title: "Ansible to update .bashrc", cast: "slide-29.cast", part: null },
+  { n: 30, imgs: ["../screenshots/idempotent.png"], title: "Idempotent", cast: "slide-30.cast", part: null },
+  { n: 31, imgs: ["../screenshots/now_we_are_ready.png"], title: "Now we are ready", cast: "slide-31.cast", part: null },
+  { n: 32, imgs: ["../screenshots/add_ansible_user_to_servers.png"], title: "Add ansible_user to servers", cast: "slide-32.cast", part: null },
+  { n: null, imgs: ["../screenshots/wait_what.png"], title: "Wait, what?", cast: null, part: null },
+  { n: 33, imgs: ["slide-33.png"], title: "Switch SSH config to ansible_user", cast: "slide-33.cast", part: null },
+  { n: 34, imgs: ["slide-34.png"], title: "Verify ansible_user can connect", cast: "slide-34.cast", part: null },
+  { n: 35, imgs: ["../screenshots/SSHD_hardening.png"], title: "SSHD Hardening", cast: "slide-35.cast", part: null },
+  { n: 36, imgs: ["slide-36.png"], title: "Now we can ping servers", cast: "slide-36.cast", part: null },
+  { n: 37, imgs: ["slide-37.png"], title: "Ad-hoc commands", cast: "slide-37.cast", part: "Part 6: Ad-hoc Commands" },
+  { n: 38, imgs: ["slide-38.png"], title: "Summary", cast: null, part: null },
+  { n: 39, imgs: ["slide-39.png"], title: "", cast: null, part: null },
 ];
 
 // Build part label map
-let partLabels = {};
 let cp = "";
-slideData.forEach(s => { if (s.part) cp = s.part; partLabels[s.n] = cp; });
+slideData.forEach(s => { if (s.part) cp = s.part; s._partLabel = cp; });
 
 // Build flat entries: each slide, then its demo entry (if any) immediately after
 const entries = [];
@@ -315,7 +318,7 @@ function syncCanvas() {
   const content = document.getElementById('content');
   const entry   = entries[current];
   const target  = entry.type === 'slide'
-    ? document.getElementById('slide-img')
+    ? (document.querySelector('#slide-imgs img') || document.getElementById('slide-imgs'))
     : document.getElementById('ap-container');
 
   const cr = content.getBoundingClientRect();
@@ -430,7 +433,7 @@ function render() {
   const s     = entry.slide;
 
   document.getElementById('counter').textContent   = `${current + 1} / ${entries.length}`;
-  document.getElementById('part-label').textContent = partLabels[s.n] || "";
+  document.getElementById('part-label').textContent = s._partLabel || "";
 
   const slideWrap = document.getElementById('slide-wrap');
   const demoWrap  = document.getElementById('demo-wrap');
@@ -443,13 +446,21 @@ function render() {
     demoWrap.style.display  = 'none';
     annBtn.style.display    = 'inline-block';
 
-    document.getElementById('slide-img').src = s.img;
+    const imgContainer = document.getElementById('slide-imgs');
+    imgContainer.innerHTML = '';
+    (s.imgs || []).forEach((src, i) => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = '';
+      if (i === 0 && annotating) { img.onload = syncCanvas; }
+      imgContainer.appendChild(img);
+    });
     document.getElementById('entry-title-text').textContent =
-      s.title ? `Slide ${s.n} — ${s.title}` : `Slide ${s.n}`;
+      s.n ? (s.title ? `Slide ${s.n} — ${s.title}` : `Slide ${s.n}`) : (s.title || '');
 
     annPaths = [];
     if (annotating) {
-      document.getElementById('slide-img').onload = syncCanvas;
+      if (!imgContainer.querySelector('img[src]')) { syncCanvas(); }
       annCanvas.style.display = 'block';
     } else {
       annCanvas.style.display = 'none';
@@ -522,10 +533,12 @@ entries.forEach((e, i) => {
   const d = document.createElement('div');
   if (e.type === 'demo') {
     d.className = e.slide.cast === 'pending' ? 'dot is-pending' : 'dot is-demo';
-    d.title = `Demo: ${e.slide.title || 'Slide ' + e.slide.n}`;
+    d.title = `Demo: ${e.slide.title || (e.slide.n ? 'Slide ' + e.slide.n : '')}`;
   } else {
     d.className = 'dot';
-    d.title = e.slide.title ? `Slide ${e.slide.n}: ${e.slide.title}` : `Slide ${e.slide.n}`;
+    d.title = e.slide.n
+      ? (e.slide.title ? `Slide ${e.slide.n}: ${e.slide.title}` : `Slide ${e.slide.n}`)
+      : (e.slide.title || '');
   }
   d.onclick = () => { current = i; render(); };
   dotsEl.appendChild(d);
