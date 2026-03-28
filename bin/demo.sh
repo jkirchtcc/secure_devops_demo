@@ -251,7 +251,7 @@ fi
 
 slide 23 "Let's use pass"
 if in_slide; then
-    run cat bin/get_vault_pass.sh
+    run cat bin/install_setup_pass.sh
     pause
     run pass ansible/vault_password
     pause

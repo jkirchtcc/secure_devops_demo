@@ -33,8 +33,10 @@ if [ "$SLIDE" = "7" ]; then
     ORIG="$HOME/.ssh/config"
     BACKUP="$HOME/.ssh/config.record-backup-$$"
     cp "$ORIG" "$BACKUP"
-    # Write only the cyberforge-control block (Host ansible entry)
-    sed -n '/# BEGIN cyberforge-control/,/# END cyberforge-control/p' "$BACKUP" > "$ORIG"
+    # Write only the cyberforge-control block (Host ansible entry), with User root
+    # (slide 7 shows the initial config before switching to ansible_user)
+    sed -n '/# BEGIN cyberforge-control/,/# END cyberforge-control/p' "$BACKUP" \
+      | sed 's/User ansible_user/User root/' > "$ORIG"
     trap "mv '$BACKUP' '$ORIG'" EXIT
     asciinema rec "$CAST" --command "cd $PWD && bin/demo.sh --slide ${SLIDE}" --overwrite
     mv "$BACKUP" "$ORIG"
