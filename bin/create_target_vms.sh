@@ -88,6 +88,13 @@ users:
       - $SSH_KEY_CONTENT
 ssh_pwauth: false
 disable_root: false
+ssh:
+  install-server: true
+# Allow root login with SSH key (cloud images default to PermitRootLogin no)
+write_files:
+  - path: /etc/ssh/sshd_config.d/10-permitroot.conf
+    content: |
+      PermitRootLogin prohibit-password
 USERDATA
 
     cat > "$CLOUD_INIT_DIR/meta-data" <<METADATA
