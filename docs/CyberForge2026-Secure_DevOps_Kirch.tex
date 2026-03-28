@@ -1242,42 +1242,55 @@ PLAY RECAP ************************************************************
 % ==============================================================
 \begin{frame}[fragile]{Ad-hoc commands}
 \begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\texttt{ansible servers -m shell -a "df -h"}
+\begin{column}{0.32\textwidth}
+{\tiny\texttt{ansible servers -m setup}}\\
+{\tiny\texttt{\ \ -a "filter=ansible\_distribution*"}}
 \vspace{0.1cm}
 \begin{termsmall}
-192.168.122.101 | CHANGED | rc=0 >>
-Filesystem  Size Used Avail Use% Mounted
-/dev/vda1   9.6G 1.7G  7.9G  18% /
-tmpfs        46M 1008K  45M   3% /run
-...
-192.168.122.102 | CHANGED | rc=0 >>
-Filesystem  Size Used Avail Use% Mounted
-/dev/vda1   9.6G 1.7G  7.9G  18% /
-...
-192.168.122.103 | CHANGED | rc=0 >>
-Filesystem  Size Used Avail Use% Mounted
-/dev/vda1   9.6G 1.7G  7.9G  18% /
+192.168.122.101 | SUCCESS
+  ansible_distribution:
+    Ubuntu
+  ansible_distribution_version:
+    24.04
+192.168.122.102 | SUCCESS
+  ...Ubuntu 22.04
+192.168.122.103 | SUCCESS
+  ...Ubuntu 20.04
 \end{termsmall}
 \end{column}
-\begin{column}{0.48\textwidth}
-\texttt{ansible servers -a "ss -tuln"}
+\begin{column}{0.32\textwidth}
+{\tiny\texttt{ansible servers -m shell}}\\
+{\tiny\texttt{\ \ -a "df -h"}}
 \vspace{0.1cm}
 \begin{termsmall}
-192.168.122.101 | CHANGED | rc=0 >>
-Netid State Recv-Q Send-Q
-  Local Address:Port
-udp   UNCONN 0      0
-  127.0.0.53%lo:53
-tcp   LISTEN 0   4096
-  127.0.0.53%lo:53
-tcp   LISTEN 0    128
-  0.0.0.0:22
-tcp   LISTEN 0    128
-  [::]:22
-192.168.122.102 | CHANGED | rc=0 >>
+192.168.122.101 | CHANGED
+Filesystem  Size Avail
+/dev/vda1   9.6G  7.9G
+tmpfs        46M   45M
 ...
-192.168.122.103 | CHANGED | rc=0 >>
+192.168.122.102 | CHANGED
+...
+192.168.122.103 | CHANGED
+...
+\end{termsmall}
+\end{column}
+\begin{column}{0.32\textwidth}
+{\tiny\texttt{ansible servers}}\\
+{\tiny\texttt{\ \ -a "ss -tuln"}}
+\vspace{0.1cm}
+\begin{termsmall}
+192.168.122.101 | CHANGED
+Netid State
+  Address:Port
+udp UNCONN
+  127.0.0.53:53
+tcp LISTEN
+  0.0.0.0:22
+tcp LISTEN
+  [::]:22
+192.168.122.102 | CHANGED
+...
+192.168.122.103 | CHANGED
 ...
 \end{termsmall}
 \end{column}

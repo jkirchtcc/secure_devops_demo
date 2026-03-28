@@ -302,6 +302,12 @@ fi
 
 slide 30 "Idempotent — run it again"
 if in_slide; then
+    if [ "$SLIDE_FILTER" -eq 1 ]; then
+        # Reset for standalone recording: remove block so first run shows 'changed'
+        sed -i '/# BEGIN Ansible SSH agent configuration/,/# END Ansible SSH agent configuration/d' ~/.bashrc
+    fi
+    run ansible-playbook add_ssh_key.yml
+    pause
     run ansible-playbook add_ssh_key.yml
     pause
     hold
@@ -309,7 +315,11 @@ fi
 
 slide 31 "Now we are ready"
 if in_slide; then
-    ANSIBLE_HOST_KEY_CHECKING=False run ansible-playbook ping-servers.yml
+    # Clear known_hosts so first-time connection warnings appear in the recording
+    ssh-keygen -R 192.168.122.101 2>/dev/null || true
+    ssh-keygen -R 192.168.122.102 2>/dev/null || true
+    ssh-keygen -R 192.168.122.103 2>/dev/null || true
+    run ansible-playbook ping-servers.yml
     pause
     hold
 fi
