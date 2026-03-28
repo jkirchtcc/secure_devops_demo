@@ -460,13 +460,11 @@ Do you want to continue? [Y/n]
 % ==============================================================
 % Slide 14 - Logout & Login
 % ==============================================================
-\begin{frame}[fragile]{Logout \& Login}
-\begin{termsmall}
-ansible_user@ansible:~$ ./install_ansible.sh
-...
-~/.local/bin has been added to PATH, but you need to open
-a new terminal or re-login for this PATH change to take effect.
-\end{termsmall}
+\begin{frame}{Logout \& Login}
+\begin{itemize}
+  \item After install, \texttt{\textasciitilde/.local/bin} is added to \texttt{PATH}
+  \item But you need to \textbf{logout and log back in} for the change to take effect
+\end{itemize}
 \end{frame}
 
 % ==============================================================
@@ -583,13 +581,6 @@ localhost  : ok=2  changed=0  failed=0
 % Slide 19 - Update ansible with Ansible
 % ==============================================================
 \begin{frame}[fragile]{Update ansible with Ansible}
-\begin{termsmall}
-ansible_user@ansible:~/secure_devops_demo$ ansible-playbook update.yml
-[WARNING]: Error getting vault password file (default):
-  The vault password file /nonexistent was not found
-[ERROR]: The vault password file /nonexistent was not found
-\end{termsmall}
-\vspace{0.2cm}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
 \begin{codeyaml}
@@ -614,6 +605,13 @@ ansible_user@ansible:~/secure_devops_demo$ ansible-playbook update.yml
 \end{itemize}
 \end{column}
 \end{columns}
+\vspace{0.2cm}
+\begin{termsmall}
+ansible_user@ansible:~/secure_devops_demo$ ansible-playbook update.yml
+[WARNING]: Error getting vault password file (default):
+  The vault password file /nonexistent was not found
+[ERROR]: The vault password file /nonexistent was not found
+\end{termsmall}
 \end{frame}
 
 % ==============================================================
