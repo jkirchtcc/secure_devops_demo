@@ -163,7 +163,7 @@ header "Part 1: SSH Setup Demo  (control VM only — no target VMs yet)"
 slide 4 "Generate SSH Keys"
 if in_slide; then
     rm -f ~/.ssh/DemoSSHKey ~/.ssh/DemoSSHKey.pub
-    run ssh-keygen -t ed25519 -C "DemoSSHKey" -f ~/.ssh/DemoSSHKey -N ""
+    run ssh-keygen -t ed25519 -C "DemoSSHKey" -f ~/.ssh/DemoSSHKey
     pause
     run cat ~/.ssh/DemoSSHKey.pub
     pause
