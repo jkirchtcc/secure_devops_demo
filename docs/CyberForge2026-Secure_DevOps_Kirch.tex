@@ -233,7 +233,7 @@
 \begin{itemize}
   \item Generate an ED25519 SSH key with the comment ``DemoSSHKey'' and save it using that same filename -- \textcolor{highlight}{USE A PASSWORD to protect your SSH Key.}
 \end{itemize}
-\vspace{0.2cm}
+\vspace{0.1cm}
 \begin{codebash}
 ssh-keygen -t ed25519 -C DemoSSHKey \
   -f /home/ansible_user/.ssh/DemoSSHKey -N ""
@@ -245,11 +245,6 @@ ssh-keygen -t ed25519 -C DemoSSHKey \
     \item \textbf{\texttt{-C DemoSSHKey}}: Adds the comment ``DemoSSHKey'' to the key
     \item \textbf{\texttt{-f \ldots/DemoSSHKey}}: Saves keys to \texttt{\textasciitilde/.ssh/DemoSSHKey} and \texttt{.pub}.
     \item \textbf{\texttt{-N ""}}: Empty passphrase (demo only --- use a real one in production!)
-  \end{itemize}
-  \item After running this command, you'll have two files:
-  \begin{itemize}
-    \item \textasciitilde/.ssh/DemoSSHKey (the private key)
-    \item \textasciitilde/.ssh/DemoSSHKey.pub (the corresponding public key)
   \end{itemize}
 \end{itemize}
 \end{frame}
