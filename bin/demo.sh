@@ -170,6 +170,7 @@ if in_slide; then
         printf 'ssh-keygen -t ed25519 -C DemoSSHKey -f ~/.ssh/DemoSSHKey' | pv -qL 8
         echo
         printf '\n\n' | ssh-keygen -t ed25519 -C "DemoSSHKey" -f ~/.ssh/DemoSSHKey
+        echo  # newline after passphrase prompts
         sleep "$RECORD_CMD_PAUSE"
     else
         run ssh-keygen -t ed25519 -C "DemoSSHKey" -f ~/.ssh/DemoSSHKey
