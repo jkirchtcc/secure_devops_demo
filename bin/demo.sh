@@ -7,6 +7,9 @@ cd "$(dirname "$0")/.."
 # Ensure ~/.local/bin is in PATH (ansible installed via uv)
 export PATH="$HOME/.local/bin:$PATH"
 
+# Force Ansible to emit ANSI color even when stdout is not a TTY (e.g. asciinema)
+export ANSIBLE_FORCE_COLOR=1
+
 # Flags:
 #   --test      run all parts without pausing (for automated testing)
 #   --record    run without pausing, with pv typing simulation and custom prompt
