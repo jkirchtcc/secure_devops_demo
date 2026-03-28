@@ -487,7 +487,7 @@ function render() {
     } else {
       apContainer.style.display = 'block';
       pending.style.display = 'none';
-      currentPlayer = AsciinemaPlayer.create(s.cast, apContainer, {
+      currentPlayer = AsciinemaPlayer.create(s.cast + '?t=' + Date.now(), apContainer, {
         autoPlay: true,
         loop: true,
         fit: 'width',
