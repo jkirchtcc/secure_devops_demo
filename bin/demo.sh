@@ -200,13 +200,11 @@ header "Part 3: Ansible Demo  (control VM only)"
 
 slide 17 "Our First Ansible Playbook"
 if in_slide; then
-    run cat ansible.cfg
-    pause
     run cat inventory.ini
     pause
     run cat ping.yml
     pause
-    run ansible-playbook ping.yml
+    run ansible-playbook -i inventory.ini ping.yml
     pause
     hold
 fi
@@ -215,7 +213,8 @@ slide 19 "Update ansible with Ansible"
 if in_slide; then
     run cat update.yml
     pause
-    run ansible-playbook update.yml
+    # Run without vault password so become_password can't be loaded — shows why vault matters
+    ANSIBLE_VAULT_PASSWORD_FILE=/nonexistent run ansible-playbook update.yml
     pause
     hold
 fi
