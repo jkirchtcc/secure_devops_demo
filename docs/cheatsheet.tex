@@ -1,0 +1,243 @@
+\documentclass[8pt,letterpaper]{article}
+\usepackage[margin=0.25in,top=0.2in,bottom=0.15in]{geometry}
+\usepackage{multicol}
+\usepackage[most]{tcolorbox}
+\usepackage{xcolor}
+\usepackage{helvet}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+\usepackage[nolinks]{qrcode}
+\renewcommand{\familydefault}{\sfdefault}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\pagestyle{empty}
+\hypersetup{colorlinks=true,urlcolor=blue!70!black,linkcolor=black}
+\renewcommand{\UrlBreaks}{\do\/\do-\do.\do_\do=}
+
+% ── Colors ───────────────────────────────────────────────────────────────────
+\definecolor{headerblue}{RGB}{52,79,115}
+\definecolor{codebg}{RGB}{245,246,248}
+\definecolor{codetext}{RGB}{30,30,30}
+\definecolor{codeborder}{RGB}{200,205,215}
+\definecolor{discordpurple}{RGB}{88,101,242}
+
+% ── Verbatim code listing inside tcolorbox ───────────────────────────────────
+\tcbuselibrary{listings,skins}
+
+\newtcblisting{codeblock}{
+  colback=codebg, colframe=codeborder,
+  arc=2pt, boxrule=0.4pt,
+  left=2pt, right=2pt, top=1pt, bottom=1pt,
+  listing only,
+  listing options={
+    basicstyle=\fontsize{5.8}{7.0}\ttfamily\color{codetext},
+    breaklines=true,
+    keepspaces=true,
+    columns=fullflexible,
+  },
+  before=\vspace{1pt},
+  after=\vspace{0pt},
+}
+
+% ── Section box ──────────────────────────────────────────────────────────────
+\newtcolorbox{secbox}[1]{
+  colback=white, colframe=headerblue,
+  title={\small\bfseries\color{white}#1},
+  colbacktitle=headerblue,
+  boxrule=0.5pt,
+  arc=3pt,
+  left=2pt, right=2pt, top=0pt, bottom=1pt,
+  toptitle=1pt, bottomtitle=1pt,
+  before=\vspace{1pt},
+  after=\vspace{1pt},
+}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+% ── Title ────────────────────────────────────────────────────────────────────
+{\LARGE\bfseries Secure DevOps for Ansible%
+  \hfill\normalsize\color{gray}One-Page Reference}\\[-3pt]
+\textcolor{headerblue}{\rule{\linewidth}{1.5pt}}\\[1pt]
+{\small
+  Flow:\enspace SSH key $\to$ SSH-Agent $\to$ GPG key\,/\,GPG-Agent $\to$
+  \texttt{pass} $\to$ vault helper $\to$ \texttt{ansible.cfg} $\to$
+  encrypted \texttt{vault.yml} $\to$ \texttt{ansible-playbook}}\\[2pt]
+
+% ── Two columns ──────────────────────────────────────────────────────────────
+\setlength{\columnsep}{8pt}
+\begin{multicols}{2}
+
+\begin{secbox}{1) Generate SSH and GPG Keys}
+\begin{codeblock}
+# SSH key for remote access
+ssh-keygen -t ed25519 -C "ansible-demo" \
+  -f ~/.ssh/id_ed25519
+
+# GPG key for pass / vault password storage
+gpg --full-generate-key
+\end{codeblock}
+\end{secbox}
+
+\begin{secbox}{2) Start Agents and Load Keys}
+\begin{codeblock}
+# SSH agent — add to ~/.bashrc for persistence
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+
+# GPG agent — ensure it is running
+gpg-connect-agent /bye
+\end{codeblock}
+\end{secbox}
+
+\begin{secbox}{3) \textasciitilde/.ssh/config}
+\begin{codeblock}
+Host ansible
+    HostName 192.168.1.10
+    User ansible_user
+    IdentityFile ~/.ssh/id_ed25519
+    AddKeysToAgent yes
+
+Host server1
+    HostName 192.168.1.101
+    User ansible_user
+    IdentityFile ~/.ssh/id_ed25519
+    AddKeysToAgent yes
+    StrictHostKeyChecking accept-new
+\end{codeblock}
+\end{secbox}
+
+\begin{secbox}{4) pass --- The Unix Password Manager}
+\begin{codeblock}
+# Find your GPG key ID
+gpg --list-secret-keys --keyid-format LONG
+
+# Initialize pass with your key ID
+pass init YOURKEYID
+
+# Store and retrieve the vault password
+pass insert ansible/vault_password
+pass ansible/vault_password
+\end{codeblock}
+\end{secbox}
+
+\begin{secbox}{5) Vault Password Helper Script}
+\begin{codeblock}
+mkdir -p ~/bin
+cat > ~/bin/get_vault_pass.sh <<'EOF'
+#!/bin/sh
+pass ansible/vault_password
+EOF
+chmod 700 ~/bin/get_vault_pass.sh
+\end{codeblock}
+\end{secbox}
+
+\begin{secbox}{6) Configure Ansible (\texttt{ansible.cfg})}
+\begin{codeblock}
+[defaults]
+inventory           = inventory.ini
+interpreter_python  = /usr/bin/python3
+vault_password_file = ~/bin/get_vault_pass.sh
+
+[ssh_connection]
+ssh_args = -o StrictHostKeyChecking=accept-new
+\end{codeblock}
+\end{secbox}
+
+\begin{secbox}{7) Encrypted Secrets in \texttt{vault.yml}}
+\begin{codeblock}
+# Create / edit / view the encrypted vault
+ansible-vault create vault.yml
+ansible-vault edit   vault.yml
+ansible-vault view   vault.yml
+
+# Plaintext values inside vault.yml:
+ansible_become_password: YourSudoPass
+ansible_user_password:   YourUserPass
+
+# On disk it is AES-256 encrypted:
+$ANSIBLE_VAULT;1.1;AES256
+6136616539613930...
+\end{codeblock}
+\end{secbox}
+
+\begin{secbox}{8) Playbook Uses \texttt{vault.yml}}
+\begin{codeblock}
+---
+- name: Update packages securely
+  hosts: servers     # remote_user via ~/.ssh/config
+  become: yes
+  vars_files:
+    - vault.yml
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+\end{codeblock}
+\end{secbox}
+
+\begin{secbox}{9) Run, Verify, and Harden}
+\begin{codeblock}
+ansible servers -m ping
+ansible-playbook update.yml
+
+# /etc/ssh/sshd_config hardening
+PermitRootLogin      prohibit-password
+PubkeyAuthentication yes
+PasswordAuthentication no
+\end{codeblock}
+\end{secbox}
+
+\end{multicols}
+
+\vspace{1pt}
+\textcolor{headerblue}{\rule{\linewidth}{0.8pt}}
+\vspace{2pt}
+
+% ── References ───────────────────────────────────────────────────────────────
+{\fontsize{6.5}{8.5}\selectfont
+\begin{tabular}{@{}p{0.245\linewidth}p{0.245\linewidth}p{0.245\linewidth}p{0.245\linewidth}@{}}
+\textbf{\color{headerblue}Ansible} &
+\textbf{\color{headerblue}SSH} &
+\textbf{\color{headerblue}GPG / pass} &
+\textbf{\color{headerblue}Hardening} \\[1pt]
+\textbf{Ansible for DevOps} — Geerling\newline
+{\fontsize{5.5}{7}\selectfont\href{https://leanpub.com/ansible-for-devops}{leanpub.com/ansible-for-devops}} &
+\textbf{SSH Mastery} — M.W. Lucas\newline
+{\fontsize{5.5}{7}\selectfont\href{https://mwl.io/nonfiction/tools\#ssh}{mwl.io/nonfiction/tools\#ssh}} &
+\textbf{pass} — Unix Password Manager\newline
+{\fontsize{5.5}{7}\selectfont\href{https://passwordstore.org}{passwordstore.org}} &
+\textbf{CIS Benchmarks}\newline
+{\fontsize{5.5}{7}\selectfont\href{https://cisecurity.org/cis-benchmarks}{cisecurity.org/cis-benchmarks}} \\[3pt]
+\textbf{Ansible Vault Guide}\newline
+{\fontsize{5.5}{7}\selectfont\href{https://docs.ansible.com/ansible/latest/vault_guide}{docs.ansible.com/ansible/latest/vault\_guide}} &
+\textbf{Mozilla OpenSSH Guidelines}\newline
+{\fontsize{5.5}{7}\selectfont\href{https://wiki.mozilla.org/Security/Guidelines/OpenSSH}{wiki.mozilla.org/Security/Guidelines/OpenSSH}} &
+\textbf{OpenPGP Best Practices}\newline
+{\fontsize{5.5}{7}\selectfont\href{https://riseup.net/en/security/message-security/openpgp/best-practices}{riseup.net/en/security/message-security/openpgp/best-practices}} &
+\textbf{NIST SP 800-123}\newline
+{\fontsize{5.5}{7}\selectfont\href{https://csrc.nist.gov/publications/detail/sp/800-123/final}{csrc.nist.gov/publications/detail/sp/800-123/final}} \\
+\end{tabular}
+}
+
+\vspace{2pt}
+{\small\color{gray}Focused on SSH/GPG keys, agents, \texttt{pass}, and Ansible Vault --- no plaintext passwords anywhere in the flow.}\\[1pt]
+\textcolor{headerblue}{\rule{\linewidth}{0.8pt}}
+\vspace{3pt}
+
+% ── Footer with Discord QR code ──────────────────────────────────────────────
+\begin{minipage}[c]{0.72\linewidth}
+  {\normalsize\textbf{\textcolor{discordpurple}{\faDiscord\enspace TCC Cybersecurity Club}}}\\[1pt]
+  {\small Join us on Discord:\enspace
+    \href{https://discord.gg/k3pgCGX}%
+    {\textcolor{discordpurple}{\textbf{\texttt{discord.gg/k3pgCGX}}}}}\\[4pt]
+  {\fontsize{6.5}{8}\selectfont\color{gray}
+    \textcopyright\ 2026 Joel Kirch \quad
+    \href{https://creativecommons.org/licenses/by/4.0/}%
+    {\faCreativeCommons\ \faCreativeCommonsBy\ CC BY 4.0}}
+\end{minipage}%
+\hfill%
+\begin{minipage}[c]{0.22\linewidth}\raggedleft
+  \qrcode[height=1.5cm]{https://discord.gg/k3pgCGX}
+\end{minipage}
+
+\end{document}
