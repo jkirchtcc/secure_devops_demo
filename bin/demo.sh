@@ -163,7 +163,17 @@ header "Part 1: SSH Setup Demo  (control VM only — no target VMs yet)"
 slide 4 "Generate SSH Keys"
 if in_slide; then
     rm -f ~/.ssh/DemoSSHKey ~/.ssh/DemoSSHKey.pub
-    run ssh-keygen -t ed25519 -C "DemoSSHKey" -f ~/.ssh/DemoSSHKey
+    if [ "$RECORD_MODE" -eq 1 ]; then
+        # Show the command typed out, then pipe empty passphrases so the
+        # recording captures the prompts without hanging for interactive input
+        echo -ne "${BOLD}${RECORD_PROMPT}${RESET}"
+        printf 'ssh-keygen -t ed25519 -C DemoSSHKey -f ~/.ssh/DemoSSHKey' | pv -qL 8
+        echo
+        printf '\n\n' | ssh-keygen -t ed25519 -C "DemoSSHKey" -f ~/.ssh/DemoSSHKey
+        sleep "$RECORD_CMD_PAUSE"
+    else
+        run ssh-keygen -t ed25519 -C "DemoSSHKey" -f ~/.ssh/DemoSSHKey
+    fi
     pause
     run cat ~/.ssh/DemoSSHKey.pub
     pause
